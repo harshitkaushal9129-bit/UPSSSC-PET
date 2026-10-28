@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>User Progress Dashboard - UPSSSC PET</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="app-header">
+  <div class="logo"><span class="badge">SNT</span><h1>User Progress Records</h1></div>
+  <div><a href="index.html" class="btn btn-primary btn-sm">🏠 Back to Quiz</a></div>
+</header>
+<main class="container">
+  <div class="config-card">
+    <h3>Saved Quiz Progress & History</h3>
+    <p class="muted">All student test attempts, scores, and timestamps stored in Firebase Firestore.</p>
+    <div style="overflow-x: auto; margin-top: 1rem;">
+      <table style="width: 100%; border-collapse: collapse; text-align: left;" id="progressTable">
+        <thead>
+          <tr style="border-bottom: 2px solid var(--border);">
+            <th style="padding: 10px;">User Email / ID</th>
+            <th style="padding: 10px;">Score</th>
+            <th style="padding: 10px;">Correct / Wrong</th>
+            <th style="padding: 10px;">Accuracy</th>
+            <th style="padding: 10px;">Date & Time</th>
+          </tr>
+        </thead>
+        <tbody id="progressTableBody">
+          <tr><td colspan="5" style="padding: 15px; text-align: center; color: var(--muted);">Loading progress data...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAsSV2NvqEyXEk92xHNfi9MCPbQxPDvm8g",
+    authDomain: "competitive-exams-by-kaushalji.firebaseapp.com",
+    projectId: "competitive-exams-by-kaushalji",
+    storageBucket: "competitive-exams-by-kaushalji.firebasestorage.app",
+    messagingSenderId: "951680951005",
+    appId: "1:951680951005:web:60903dd04be26eede37134",
+    measurementId: "G-PS04MZCTNJ"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  async function loadProgressData() {
+    const tbody = document.getElementById('progressTableBody');
+    try {
+      const q = query(collection(db, "quiz_progress"), orderBy("timestamp", "desc"));
+      const querySnapshot = await getDocs(q);
+      
+      if (querySnapshot.empty) {
+        tbody.innerHTML = `<tr><td colspan="5" style="padding: 15px; text-align: center; color: var(--muted);">No progress records found yet.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = '';
+      querySnapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        const dateStr = data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleString() : 'Just now';
+        
+        const tr = document.createElement('tr');
+        tr.style.borderBottom = "1px solid var(--border)";
+        tr.innerHTML = `
+          <td style="padding: 10px; font-weight: 600;">${data.email || data.uid}</td>
+          <td style="padding: 10px; color: var(--primary); font-weight: bold;">${data.score} / ${data.maxMarks}</td>
+          <td style="padding: 10px;"><span style="color: var(--success);">${data.correct} Correct</span> / <span style="color: var(--danger);">${data.wrong} Wrong</span></td>
+          <td style="padding: 10px;">${data.accuracy}%</td>
+          <td style="padding: 10px; font-size: 0.9rem; color: var(--muted);">${dateStr}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    } catch (err) {
+      console.error("Error loading records:", err);
+      tbody.innerHTML = `<tr><td colspan="5" style="padding: 15px; text-align: center; color: var(--danger);">Error loading data from Firestore. Check console.</td></tr>`;
+    }
+  }
+
+  loadProgressData();
+</script>
+</body>
+</html>
