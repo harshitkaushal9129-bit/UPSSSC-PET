@@ -10,8 +10,16 @@
 </head>
 <body>
   <header class="app-header">
-    <div class="logo"><span class="badge">UPSSSC</span><h1>PET Quiz Master</h1></div>
-    <button id="themeToggleBtn" class="btn btn-secondary">🌙 Dark</button>
+    <div class="logo">
+      <span class="badge">UPSSSC</span>
+      <h1>PET Quiz Master</h1>
+      <!-- Official Portal Link as requested -->
+      <a href="https://harshitkaushal9129-bit.github.io/Dashboard-of-snt/" target="_blank" class="btn btn-secondary btn-sm" style="margin-left: 10px; text-decoration: none;">Official Portal</a>
+    </div>
+    <div class="header-actions" style="display: flex; align-items: center; gap: 10px;">
+      <div id="authContainer"></div>
+      <button id="themeToggleBtn" class="btn btn-secondary">🌙 Dark</button>
+    </div>
   </header>
   <main class="container">
     <section id="setupView" class="view active">
@@ -95,6 +103,7 @@
       </div>
     </section>
   </main>
-  <script src="script.js"></script>
+  <!-- Notice type="module" is added so Firebase Modular SDK works smoothly -->
+  <script type="module" src="script.js"></script>
 </body>
 </html>
