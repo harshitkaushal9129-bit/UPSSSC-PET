@@ -1,0 +1,132 @@
+[
+  {
+    "id": 1,
+    "subject": "history",
+    "question": "Which Harappan site is known for having a dockyard?",
+    "options": [
+      "Mohenjo-daro",
+      "Lothal",
+      "Kalibangan",
+      "Ropar"
+    ],
+    "answer": 1,
+    "explanation": "Lothal, in present-day Gujarat, is known for its ancient dockyard."
+  },
+  {
+    "id": 2,
+    "subject": "movement",
+    "question": "Who led the Non-Cooperation Movement launched in 1920?",
+    "options": [
+      "Mahatma Gandhi",
+      "Subhash Chandra Bose",
+      "Jawaharlal Nehru",
+      "Bal Gangadhar Tilak"
+    ],
+    "answer": 0,
+    "explanation": "Mahatma Gandhi led the Non-Cooperation Movement against British rule."
+  },
+  {
+    "id": 3,
+    "subject": "geography",
+    "question": "Which is the highest peak in the Western Ghats?",
+    "options": [
+      "Doddabetta",
+      "Anamudi",
+      "Kalsubai",
+      "Mahendragiri"
+    ],
+    "answer": 1,
+    "explanation": "Anamudi in Kerala is the highest peak in the Western Ghats."
+  },
+  {
+    "id": 4,
+    "subject": "polity",
+    "question": "Which Articles of the Indian Constitution cover the Right to Equality?",
+    "options": [
+      "Articles 12–13",
+      "Articles 14–18",
+      "Articles 19–22",
+      "Articles 23–24"
+    ],
+    "answer": 1,
+    "explanation": "Articles 14 to 18 deal with the Right to Equality."
+  },
+  {
+    "id": 5,
+    "subject": "economy",
+    "question": "Which body historically formulated India's Five-Year Plans?",
+    "options": [
+      "Finance Commission",
+      "Planning Commission",
+      "RBI",
+      "NABARD"
+    ],
+    "answer": 1,
+    "explanation": "The Planning Commission formulated Five-Year Plans before it was replaced by NITI Aayog in 2015."
+  },
+  {
+    "id": 6,
+    "subject": "science",
+    "question": "What is the chemical name of baking soda?",
+    "options": [
+      "Sodium chloride",
+      "Sodium carbonate",
+      "Sodium bicarbonate",
+      "Calcium carbonate"
+    ],
+    "answer": 2,
+    "explanation": "Baking soda is sodium bicarbonate (NaHCO₃)."
+  },
+  {
+    "id": 7,
+    "subject": "maths",
+    "question": "What is the average of the first five prime numbers?",
+    "options": [
+      "5.6",
+      "5.4",
+      "5.2",
+      "6.0"
+    ],
+    "answer": 0,
+    "explanation": "The first five primes are 2, 3, 5, 7 and 11. Their sum is 28; 28 ÷ 5 = 5.6."
+  },
+  {
+    "id": 8,
+    "subject": "hindi",
+    "question": "'सूर्योदय' शब्द का सही संधि-विच्छेद क्या है?",
+    "options": [
+      "सूर्य + उदय",
+      "सूर्यो + दय",
+      "सूर्य + दय",
+      "सूर + उदय"
+    ],
+    "answer": 0,
+    "explanation": "'सूर्योदय' का संधि-विच्छेद 'सूर्य + उदय' है।"
+  },
+  {
+    "id": 9,
+    "subject": "english",
+    "question": "Choose the correct synonym of 'ABANDON'.",
+    "options": [
+      "Adopt",
+      "Forsake",
+      "Retain",
+      "Cherish"
+    ],
+    "answer": 1,
+    "explanation": "'Forsake' means to abandon or give up."
+  },
+  {
+    "id": 10,
+    "subject": "reasoning",
+    "question": "If CAT is coded as 3120 using letter positions, how is DOG coded?",
+    "options": [
+      "4157",
+      "4147",
+      "3157",
+      "4158"
+    ],
+    "answer": 0,
+    "explanation": "D = 4, O = 15 and G = 7, so the code is 4157."
+  }
+]
