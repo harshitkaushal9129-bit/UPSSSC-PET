@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getFirestore, collection, doc, setDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAsSV2NvqEyXEk92xHNfi9MCPbQxPDvm8g",
@@ -26,20 +26,78 @@ const $=id=>document.getElementById(id);
 const authView=$('authView'),setupView=$('setupView'),quizView=$('quizView'),resultView=$('resultView');
 const subjectCards=[...document.querySelectorAll('.subject-card')],countCards=[...document.querySelectorAll('.count-card')];
 
-// Auth State Observer
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, async (user) => {
   currentUser = user;
   const authContainer = $('authContainer');
   if (user) {
+    let userAge = '';
+    try {
+      const userDocRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userDocRef);
+      if (userSnap.exists()) {
+        userAge = userSnap.data().age || '';
+      }
+    } catch(err) { console.error(err); }
+
     authContainer.innerHTML = `
-      <div class="user-profile-div">
-        <span class="user-email">${user.email}</span>
-        <button id="logoutBtn" class="btn btn-secondary btn-sm">Logout</button>
+      <div class="profile-dropdown-container">
+        <button id="profileToggleBtn" class="profile-icon-btn">
+          <img src="${user.photoURL || 'https://via.placeholder.com/40'}" alt="Profile" class="profile-icon-img">
+        </button>
+        <div id="profileDropdownMenu" class="profile-dropdown-menu">
+          <div class="profile-user-info">
+            <img src="${user.photoURL || 'https://via.placeholder.com/40'}" alt="User">
+            <div class="profile-user-details">
+              <h4>${user.displayName || 'User'}</h4>
+              <p>${user.email}</p>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:0.4rem;">
+            <label style="font-size:0.8rem;font-weight:600;">Aapki Age (Umar):</label>
+            <div style="display:flex;gap:0.4rem;">
+              <input type="number" id="userAgeInput" class="option-btn" style="padding:0.4rem;font-size:0.9rem;" value="${userAge}" placeholder="Enter age">
+              <button id="saveAgeBtn" class="btn btn-primary btn-sm">Save</button>
+            </div>
+          </div>
+          <button id="logoutBtn" class="btn btn-secondary btn-sm btn-block" style="margin-top:0.3rem;">Logout</button>
+        </div>
       </div>
     `;
+
+    const profileToggleBtn = $('profileToggleBtn');
+    const profileDropdownMenu = $('profileDropdownMenu');
+    profileToggleBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      profileDropdownMenu.classList.toggle('show');
+    });
+
+    window.addEventListener('click', () => {
+      profileDropdownMenu.classList.remove('show');
+    });
+
+    profileDropdownMenu.addEventListener('click', (e) => e.stopPropagation());
+
+    $('saveAgeBtn').addEventListener('click', async () => {
+      const ageVal = $('userAgeInput').value;
+      try {
+        await setDoc(doc(db, "users", user.uid), {
+          uid: user.uid,
+          email: user.email,
+          displayName: user.displayName || 'User',
+          photoURL: user.photoURL || '',
+          age: ageVal,
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+        alert("Age successfully saved to Firebase!");
+        profileDropdownMenu.classList.remove('show');
+      } catch(e) {
+        console.error("Error saving age:", e);
+        alert("Failed to save age.");
+      }
+    });
+
     $('logoutBtn').addEventListener('click', () => signOut(auth));
     
-    // Switch view to setup once logged in
     authView.classList.add('hidden');
     setupView.classList.remove('hidden');
   } else {
@@ -51,7 +109,6 @@ onAuthStateChanged(auth, (user) => {
   }
 });
 
-// Google Sign In
 $('googleLoginBtn').addEventListener('click', () => {
   signInWithPopup(auth, provider).catch((error) => {
     console.error("Google Auth Error:", error);
@@ -59,7 +116,6 @@ $('googleLoginBtn').addEventListener('click', () => {
   });
 });
 
-// Email/Password Register & Login Handlers
 $('emailRegisterBtn').addEventListener('click', () => {
   const email = $('authEmail').value;
   const password = $('authPassword').value;
@@ -261,7 +317,7 @@ async function finishQuiz(){
 
   if (currentUser) {
     try {
-      await addDoc(collection(db, "quiz_progress"), {
+      await setDoc(doc(collection(db, "quiz_progress")), {
         uid: currentUser.uid,
         email: currentUser.email,
         score: score,
