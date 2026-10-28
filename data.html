@@ -8,28 +8,19 @@
 </head>
 <body>
 <header class="app-header">
-  <div class="logo"><span class="badge">SNT</span><h1>User Progress Records</h1></div>
+  <div class="logo"><span class="badge">SNT</span><h1>Student Progress Dashboard</h1></div>
   <div><a href="index.html" class="btn btn-primary btn-sm">🏠 Back to Quiz</a></div>
 </header>
 <main class="container">
-  <div class="config-card">
-    <h3>Saved Quiz Progress & History</h3>
-    <p class="muted">All student test attempts, scores, and timestamps stored in Firebase Firestore.</p>
-    <div style="overflow-x: auto; margin-top: 1rem;">
-      <table style="width: 100%; border-collapse: collapse; text-align: left;" id="progressTable">
-        <thead>
-          <tr style="border-bottom: 2px solid var(--border);">
-            <th style="padding: 10px;">User Email / ID</th>
-            <th style="padding: 10px;">Score</th>
-            <th style="padding: 10px;">Correct / Wrong</th>
-            <th style="padding: 10px;">Accuracy</th>
-            <th style="padding: 10px;">Date & Time</th>
-          </tr>
-        </thead>
-        <tbody id="progressTableBody">
-          <tr><td colspan="5" style="padding: 15px; text-align: center; color: var(--muted);">Loading progress data...</td></tr>
-        </tbody>
-      </table>
+  <div class="welcome-banner" style="margin-bottom: 1.5rem;">
+    <h2>Quiz Performance Records</h2>
+    <p>Live student attempts, scores, and accuracy tracked via Firebase Firestore.</p>
+  </div>
+  
+  <!-- Grid container where cards will be injected -->
+  <div id="progressGridContainer" class="progress-grid">
+    <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: var(--muted);">
+      Loading student progress records...
     </div>
   </div>
 </main>
@@ -52,35 +43,48 @@
   const db = getFirestore(app);
 
   async function loadProgressData() {
-    const tbody = document.getElementById('progressTableBody');
+    const container = document.getElementById('progressGridContainer');
     try {
       const q = query(collection(db, "quiz_progress"), orderBy("timestamp", "desc"));
       const querySnapshot = await getDocs(q);
       
       if (querySnapshot.empty) {
-        tbody.innerHTML = `<tr><td colspan="5" style="padding: 15px; text-align: center; color: var(--muted);">No progress records found yet.</td></tr>`;
+        container.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: var(--muted);">No progress records found yet.</div>`;
         return;
       }
 
-      tbody.innerHTML = '';
+      container.innerHTML = '';
       querySnapshot.forEach((docSnap) => {
         const data = docSnap.data();
         const dateStr = data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleString() : 'Just now';
         
-        const tr = document.createElement('tr');
-        tr.style.borderBottom = "1px solid var(--border)";
-        tr.innerHTML = `
-          <td style="padding: 10px; font-weight: 600;">${data.email || data.uid}</td>
-          <td style="padding: 10px; color: var(--primary); font-weight: bold;">${data.score} / ${data.maxMarks}</td>
-          <td style="padding: 10px;"><span style="color: var(--success);">${data.correct} Correct</span> / <span style="color: var(--danger);">${data.wrong} Wrong</span></td>
-          <td style="padding: 10px;">${data.accuracy}%</td>
-          <td style="padding: 10px; font-size: 0.9rem; color: var(--muted);">${dateStr}</td>
+        const card = document.createElement('div');
+        card.className = 'progress-card';
+        card.innerHTML = `
+          <div class="progress-header">
+            <span class="progress-user">👤 ${data.email || data.uid}</span>
+            <span class="progress-time">📅 ${dateStr}</span>
+          </div>
+          <div class="progress-body">
+            <div class="progress-stat-box" style="grid-column: span 2; background: color-mix(in srgb, var(--primary) 8%, var(--card-bg)); border: 1px solid color-mix(in srgb, var(--primary) 20%, transparent);">
+              <span>Final Score</span>
+              <b style="color: var(--primary); font-size: 1.4rem;">${data.score} <small style="font-size: 0.9rem; color: var(--muted);">/ ${data.maxMarks}</small></b>
+            </div>
+            <div class="progress-stat-box">
+              <span>Correct / Wrong</span>
+              <b style="color: var(--success);">${data.correct} <small style="color: var(--danger);">/ ${data.wrong}</small></b>
+            </div>
+            <div class="progress-stat-box">
+              <span>Accuracy</span>
+              <b>${data.accuracy}%</b>
+            </div>
+          </div>
         `;
-        tbody.appendChild(tr);
+        container.appendChild(card);
       });
     } catch (err) {
       console.error("Error loading records:", err);
-      tbody.innerHTML = `<tr><td colspan="5" style="padding: 15px; text-align: center; color: var(--danger);">Error loading data from Firestore. Check console.</td></tr>`;
+      container.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: var(--danger);">Error loading data from Firestore. Check console.</div>`;
     }
   }
 
