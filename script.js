@@ -1,10 +1,56 @@
+// Firebase Imports (Modular SDK v9+)
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+// Firebase Configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyAsSV2NvqEyXEk92xHNfi9MCPbQxPDvm8g",
+  authDomain: "competitive-exams-by-kaushalji.firebaseapp.com",
+  projectId: "competitive-exams-by-kaushalji",
+  storageBucket: "competitive-exams-by-kaushalji.firebasestorage.app",
+  messagingSenderId: "951680951005",
+  appId: "1:951680951005:web:60903dd04be26eede37134",
+  measurementId: "G-PS04MZCTNJ"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const provider = new GoogleAuthProvider();
+
 let allQuestions=[],activeQuizQuestions=[],currentIndex=0,userAnswers={},bookmarked=new Set(),timerInterval=null,timeRemaining=0,reviewMode=false;
 let selectedCount=25;
-let currentLang='hi'; // Aap ise 'en' ya 'hi' set kar sakte hain ya language toggle laga sakte hain
+let currentLang='hi'; 
+let currentUser = null; // Track logged-in user
 
 const $=id=>document.getElementById(id);
 const setupView=$('setupView'),quizView=$('quizView'),resultView=$('resultView');
 const subjectCards=[...document.querySelectorAll('.subject-card')],countCards=[...document.querySelectorAll('.count-card')];
+
+// Handle Auth State & UI
+onAuthStateChanged(auth, (user) => {
+  currentUser = user;
+  const authContainer = $('authContainer');
+  if (user) {
+    authContainer.innerHTML = `
+      <div class="user-profile-div">
+        <img src="${user.photoURL || 'https://via.placeholder.com/30'}" alt="User" class="user-avatar">
+        <span class="user-email">${user.email}</span>
+        <button id="logoutBtn" class="btn btn-secondary btn-sm">Logout</button>
+      </div>
+    `;
+    $('logoutBtn').addEventListener('click', () => signOut(auth));
+  } else {
+    authContainer.innerHTML = `
+      <button id="googleLoginBtn" class="btn btn-primary btn-sm">🔍 Sign in with Google</button>
+    `;
+    $('googleLoginBtn').addEventListener('click', () => {
+      signInWithPopup(auth, provider).catch((error) => console.error("Auth Error:", error));
+    });
+  }
+});
 
 async function initApp(){
   try{
@@ -33,6 +79,10 @@ subjectCards.forEach(card=>card.addEventListener('click',()=>{
 countCards.forEach(card=>card.addEventListener('click',()=>{countCards.forEach(c=>c.classList.remove('selected'));card.classList.add('selected');selectedCount=Number(card.dataset.count)}));
 
 $('startQuizBtn').addEventListener('click',()=>{
+  if(!currentUser) {
+    alert('Kripya pehle Google Sign-In karein test shuru karne ke liye!');
+    return;
+  }
   if(!allQuestions.length){alert('Question bank load nahi hua. Check karein ki questions.json, index.html ke saath same folder mein hai.');return;}
   const chosen=subjectCards.slice(1).filter(c=>c.querySelector('input').checked).map(c=>c.querySelector('input').value);
   let pool=subjectCards[0].querySelector('input').checked||chosen.length===0?allQuestions:allQuestions.filter(q=>chosen.includes(q.subject));
@@ -60,10 +110,8 @@ function loadQuestion(index){
   const q=activeQuizQuestions[index];
   if(!q)return;
 
-  $('questionCategory').textContent=(q.subject||'General').replace(/^\w/,c=>c.toUpperCase());
-  $('quizSubjectBadge').textContent='UPSSSC PET';
+  $('questionCategory').textContent=(q.subject\vert{}\vert{}'General').replace(/^\w/,c=>c.toUpperCase());$('quizSubjectBadge').textContent='UPSSSC PET';
 
-  // Multilingual support ke liye .question[currentLang] ka use kiya gaya hai
   const questionText = (typeof q.question === 'object') ? (q.question[currentLang] || q.question.en || '') : q.question;
   $('questionText').textContent=`${index+1}. ${questionText}`;
   $('quizQuestionCountText').textContent=`Question ${index+1} of ${activeQuizQuestions.length}`;
@@ -71,7 +119,6 @@ function loadQuestion(index){
   const container=$('optionsContainer');
   container.innerHTML='';
 
-  // Multilingual options handle karne ke liye
   const optionsArr = (typeof q.options === 'object' && !Array.isArray(q.options)) ? (q.options[currentLang] || q.options.en || []) : q.options;
 
   optionsArr.forEach((opt,idx)=>{
@@ -90,7 +137,6 @@ function loadQuestion(index){
 
   $('bookmarkBtn').textContent=bookmarked.has(index)?'🔖 Bookmarked':'🔖 Bookmark';
   
-  // Explanation / Description box rendering
   const explanationBox = $('explanationBox');
   const explanationText = $('explanationText');
   
@@ -146,14 +192,13 @@ $('bookmarkBtn').addEventListener('click',()=>{
 });
 
 $('prevQuestionBtn').addEventListener('click',()=>{if(currentIndex>0){currentIndex--;loadQuestion(currentIndex)}});
-$('nextQuestionBtn').addEventListener('click',()=>{if(currentIndex<activeQuizQuestions.length-1){currentIndex++;loadQuestion(currentIndex)}});
-$('clearOptionBtn').addEventListener('click',()=>{delete userAnswers[currentIndex];loadQuestion(currentIndex)});
+$('nextQuestionBtn').addEventListener('click',()=>{if(currentIndex<activeQuizQuestions.length-1){currentIndex++;loadQuestion(currentIndex)}});$('clearOptionBtn').addEventListener('click',()=>{delete userAnswers[currentIndex];loadQuestion(currentIndex)});
 
 $('submitQuizBtn').addEventListener('click',()=>{
   if(confirm('Are you sure you want to submit the test?'))finishQuiz();
 });
 
-function finishQuiz(){
+async function finishQuiz(){
   clearInterval(timerInterval);
   quizView.classList.add('hidden');
   resultView.classList.remove('hidden');
@@ -172,8 +217,7 @@ function finishQuiz(){
   });
 
   const score=correct-wrong*.25,accuracy=correct+wrong?Math.round(correct/(correct+wrong)*100):0;
-  $('finalScore').textContent=score.toFixed(2);
-  $('maxScore').textContent=`/ ${activeQuizQuestions.length} Marks`;
+  $('finalScore').textContent=score.toFixed(2);$('maxScore').textContent=`/ ${activeQuizQuestions.length} Marks`;
   $('statCorrect').textContent=correct;
   $('statWrong').textContent=wrong;
   $('statUnanswered').textContent=unanswered;
@@ -190,6 +234,27 @@ function finishQuiz(){
     row.append(name,detail);
     $('subjectBreakdownContainer').appendChild(row);
   });
+
+  // Save Progress to Firestore Database linked with User Email/UID
+  if (currentUser) {
+    try {
+      await addDoc(collection(db, "quiz_progress"), {
+        uid: currentUser.uid,
+        email: currentUser.email,
+        displayName: currentUser.displayName || "User",
+        score: score,
+        maxMarks: activeQuizQuestions.length,
+        correct: correct,
+        wrong: wrong,
+        unanswered: unanswered,
+        accuracy: accuracy,
+        timestamp: serverTimestamp()
+      });
+      console.log("Progress successfully saved to Firestore!");
+    } catch (e) {
+      console.error("Error saving progress: ", e);
+    }
+  }
 }
 
 $('restartQuizBtn').addEventListener('click',()=>{
@@ -204,13 +269,10 @@ $('reviewAnswersBtn').addEventListener('click',()=>{
   quizView.classList.remove('hidden');
   currentIndex=0;
   loadQuestion(0);
-  $('submitQuizBtn').textContent='Back to Results';
-  $('submitQuizBtn').onclick=()=>{
+  $('submitQuizBtn').textContent='Back to Results';$('submitQuizBtn').onclick=()=>{
     quizView.classList.add('hidden');
     resultView.classList.remove('hidden');
-    // Button text aur onclick wapas reset kar rahe hain
-    $('submitQuizBtn').textContent='Submit Test';
-    $('submitQuizBtn').onclick=()=>{if(confirm('Are you sure you want to submit the test?'))finishQuiz()};
+    $('submitQuizBtn').textContent='Submit Test';$('submitQuizBtn').onclick=()=>{if(confirm('Are you sure you want to submit the test?'))finishQuiz()};
   };
 });
 
