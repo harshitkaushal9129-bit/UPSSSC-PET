@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>User Progress Dashboard - UPSSSC PET</title>
+<title>Student Progress Dashboard - UPSSSC PET</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -17,6 +17,14 @@
     <p>Live student attempts, scores, and accuracy tracked via Firebase Firestore.</p>
   </div>
   
+  <!-- Search Filter Bar -->
+  <div class="config-card" style="padding: 1rem 1.5rem; margin-bottom: 1.5rem;">
+    <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+      <input type="text" id="searchInput" class="option-btn" style="flex: 1; min-width: 250px; padding: 0.7rem 1rem;" placeholder="🔍 Search by student email or ID...">
+      <div id="totalRecordsCount" style="font-weight: 700; color: var(--muted); font-size: 0.9rem;">Loading records...</div>
+    </div>
+  </div>
+
   <!-- Grid container where cards will be injected -->
   <div id="progressGridContainer" class="progress-grid">
     <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: var(--muted);">
@@ -42,51 +50,84 @@
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
+  let allRecords = [];
+
   async function loadProgressData() {
     const container = document.getElementById('progressGridContainer');
+    const countLabel = document.getElementById('totalRecordsCount');
     try {
       const q = query(collection(db, "quiz_progress"), orderBy("timestamp", "desc"));
       const querySnapshot = await getDocs(q);
       
       if (querySnapshot.empty) {
         container.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: var(--muted);">No progress records found yet.</div>`;
+        countLabel.textContent = `Total: 0 Records`;
         return;
       }
 
-      container.innerHTML = '';
+      allRecords = [];
       querySnapshot.forEach((docSnap) => {
-        const data = docSnap.data();
-        const dateStr = data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleString() : 'Just now';
-        
-        const card = document.createElement('div');
-        card.className = 'progress-card';
-        card.innerHTML = `
-          <div class="progress-header">
-            <span class="progress-user">👤 ${data.email || data.uid}</span>
-            <span class="progress-time">📅 ${dateStr}</span>
-          </div>
-          <div class="progress-body">
-            <div class="progress-stat-box" style="grid-column: span 2; background: color-mix(in srgb, var(--primary) 8%, var(--card-bg)); border: 1px solid color-mix(in srgb, var(--primary) 20%, transparent);">
-              <span>Final Score</span>
-              <b style="color: var(--primary); font-size: 1.4rem;">${data.score} <small style="font-size: 0.9rem; color: var(--muted);">/ ${data.maxMarks}</small></b>
-            </div>
-            <div class="progress-stat-box">
-              <span>Correct / Wrong</span>
-              <b style="color: var(--success);">${data.correct} <small style="color: var(--danger);">/ ${data.wrong}</small></b>
-            </div>
-            <div class="progress-stat-box">
-              <span>Accuracy</span>
-              <b>${data.accuracy}%</b>
-            </div>
-          </div>
-        `;
-        container.appendChild(card);
+        allRecords.push(docSnap.data());
       });
+
+      renderCards(allRecords);
     } catch (err) {
       console.error("Error loading records:", err);
       container.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: var(--danger);">Error loading data from Firestore. Check console.</div>`;
+      countLabel.textContent = `Error loading data`;
     }
   }
+
+  function renderCards(records) {
+    const container = document.getElementById('progressGridContainer');
+    const countLabel = document.getElementById('totalRecordsCount');
+    countLabel.textContent = `Total: ${records.length} Records`;
+
+    if (records.length === 0) {
+      container.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: var(--muted);">No matching records found.</div>`;
+      return;
+    }
+
+    container.innerHTML = '';
+    records.forEach((data) => {
+      const dateStr = data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleString() : 'Just now';
+      
+      const card = document.createElement('div');
+      card.className = 'progress-card';
+      card.innerHTML = `
+        <div class="progress-header">
+          <span class="progress-user">👤 ${data.email || data.uid}</span>
+          <span class="progress-time">📅 ${dateStr}</span>
+        </div>
+        <div class="progress-body">
+          <div class="progress-stat-box" style="grid-column: span 2; background: color-mix(in srgb, var(--primary) 8%, var(--card-bg)); border: 1px solid color-mix(in srgb, var(--primary) 20%, transparent);">
+            <span>Final Score</span>
+            <b style="color: var(--primary); font-size: 1.4rem;">${data.score} <small style="font-size: 0.9rem; color: var(--muted);">/ ${data.maxMarks}</small></b>
+          </div>
+          <div class="progress-stat-box">
+            <span>Correct / Wrong</span>
+            <b style="color: var(--success);">${data.correct} <small style="color: var(--danger);">/ ${data.wrong}</small></b>
+          </div>
+          <div class="progress-stat-box">
+            <span>Accuracy</span>
+            <b>${data.accuracy}%</b>
+          </div>
+        </div>
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  // Real-time search filter handler
+  document.getElementById('searchInput').addEventListener('input', (e) => {
+    const term = e.target.value.toLowerCase().trim();
+    const filtered = allRecords.filter(item => {
+      const emailMatch = item.email && item.email.toLowerCase().includes(term);
+      const uidMatch = item.uid && item.uid.toLowerCase().includes(term);
+      return emailMatch || uidMatch;
+    });
+    renderCards(filtered);
+  });
 
   loadProgressData();
 </script>
