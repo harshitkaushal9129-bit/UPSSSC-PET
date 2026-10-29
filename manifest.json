@@ -1,8 +1,21 @@
 {
   "name": "UPSSSC PET Quiz Master",
   "short_name": "PET Quiz",
-  "start_url": "./index.html",
+  "start_url": "index.html",
   "display": "standalone",
   "background_color": "#f8fafc",
-  "theme_color": "#4f46e5"
+  "theme_color": "#4f46e5",
+  "description": "UPSSSC PET Exam Preparation Quiz App with real-time tracking.",
+  "icons": [
+    {
+      "src": "https://via.placeholder.com/192",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://via.placeholder.com/512",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
 }
