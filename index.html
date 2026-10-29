@@ -19,7 +19,7 @@
 </header>
 
 <main class="container">
-  <!-- Auth / Login Section (Agar user login nahi hai) -->
+  <!-- Auth / Login Section -->
   <section id="authView" class="view active">
     <div class="welcome-banner">
       <h2>Welcome to UPSSSC PET Quiz</h2>
@@ -27,13 +27,8 @@
     </div>
     <div class="config-card" style="max-width: 450px; margin: 0 auto; text-align: center;">
       <h3>Sign In / Register</h3>
-      
-      <!-- Google Sign In Button -->
       <button id="googleLoginBtn" class="btn btn-primary btn-block" style="margin-bottom: 1rem;">🔍 Sign in with Google</button>
-      
       <div style="margin: 1rem 0; color: var(--muted); font-weight: bold;">— athwa (OR) —</div>
-
-      <!-- Email / Password Form -->
       <form id="emailAuthForm" style="display: flex; flex-direction: column; gap: 0.8rem; text-align: left;">
         <div>
           <label style="font-size: 0.85rem; font-weight: 600;">Email ID / Username</label>
@@ -51,7 +46,7 @@
     </div>
   </section>
 
-  <!-- Quiz Setup View (Hidden initially until logged in) -->
+  <!-- Quiz Setup View -->
   <section id="setupView" class="view hidden">
     <div class="welcome-banner"><h2>UPSSSC PET Exam Preparation</h2><p>Select one or more subjects and quiz length to begin your practice test.</p></div>
     <div class="config-card">
@@ -89,22 +84,25 @@
   <section id="quizView" class="view hidden">
     <div class="quiz-header-bar">
       <div><span id="quizSubjectBadge" class="badge">General</span> <span id="quizQuestionCountText">Question 1</span></div>
-      <div class="timer-box">⏱️ <span id="timerDisplay">30:00</span></div>
+      <div style="display:flex; gap:10px; align-items:center;">
+        <button id="printReviewBtn" class="btn btn-secondary btn-sm hidden" style="background:var(--primary);color:#white;">🖨️ Print / Save PDF</button>
+        <div class="timer-box">⏱️ <span id="timerDisplay">30:00</span></div>
+      </div>
     </div>
-    <div class="quiz-main-layout">
-      <div class="quiz-question-container">
+    <div class="quiz-main-layout" id="quizMainLayoutContainer">
+      <div class="quiz-question-container" id="quizQuestionContainerWrapper">
         <div class="question-header"><span id="questionCategory" class="q-category">Subject</span><button id="bookmarkBtn" class="btn btn-secondary btn-sm">🔖 Bookmark</button></div>
         <h3 id="questionText" class="question-text">Loading question...</h3>
         <div id="optionsContainer" class="options-container"></div>
         <div id="explanationBox" class="explanation-box hidden"><strong>Explanation:</strong><p id="explanationText"></p></div>
-        <div class="quiz-controls">
+        <div class="quiz-controls" id="quizControlsBar">
           <button id="prevQuestionBtn" class="btn btn-secondary">Previous</button>
           <button id="clearOptionBtn" class="btn btn-secondary">Clear Selection</button>
           <button id="nextQuestionBtn" class="btn btn-primary">Next</button>
           <button id="submitQuizBtn" class="btn btn-success">Submit Test</button>
         </div>
       </div>
-      <aside class="question-palette-panel">
+      <aside class="question-palette-panel" id="questionPaletteAside">
         <h4>Question Palette</h4><div id="paletteGrid" class="palette-grid"></div>
         <div class="palette-legend">
           <div><i class="legend-dot current"></i> Current</div><div><i class="legend-dot answered"></i> Answered</div>
