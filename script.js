@@ -184,6 +184,11 @@ function startTimer(){
 }
 
 function loadQuestion(index){
+  if(reviewMode) {
+    renderAllReviewQuestions();
+    return;
+  }
+
   const q=activeQuizQuestions[index];
   if(!q)return;
 
@@ -204,34 +209,106 @@ function loadQuestion(index){
     btn.className='option-btn';
     btn.textContent=`${String.fromCharCode(65+idx)}. ${opt}`;
     if(userAnswers[index]===idx)btn.classList.add('selected');
-    if(reviewMode){
-      if(idx===q.answer)btn.classList.add('correct');
-      else if(userAnswers[index]===idx)btn.classList.add('wrong');
-    }
-    btn.disabled=reviewMode;
+    btn.disabled=false;
     btn.addEventListener('click',()=>selectOption(index,idx));
     container.appendChild(btn);
   });
 
   $('bookmarkBtn').textContent=bookmarked.has(index)?'🔖 Bookmarked':'🔖 Bookmark';
-  
-  const explanationBox = $('explanationBox');
-  const explanationText = $('explanationText');
-  
-  if(reviewMode){
-    explanationBox.classList.remove('hidden');
-    const expl = (typeof q.explanation === 'object') ? (q.explanation[currentLang] || q.explanation.en || 'No explanation provided.') : (q.explanation || 'No explanation provided.');
-    explanationText.textContent = expl;
-  } else {
-    explanationBox.classList.add('hidden');
-    explanationText.textContent = '';
-  }
+  $('explanationBox').classList.add('hidden');
+  $('explanationText').textContent = '';
 
   $('prevQuestionBtn').disabled=index===0;
   $('nextQuestionBtn').disabled=index===activeQuizQuestions.length-1;
-  $('clearOptionBtn').disabled=reviewMode;
+  $('clearOptionBtn').disabled=false;
   updatePalette();
 }
+
+// Function to render ALL questions at once for Review & Printing
+function renderAllReviewQuestions() {
+  $('quizSubjectBadge').textContent = 'Review All Questions';
+  $('quizQuestionCountText').textContent = `Total: ${activeQuizQuestions.length} Questions`;
+  $('timerDisplay').parentElement.parentElement.classList.add('hidden');
+  $('questionPaletteAside').classList.add('hidden');
+  $('quizMainLayoutContainer').style.gridTemplateColumns = '1fr';
+  $('printReviewBtn').classList.remove('hidden');
+
+  const containerWrapper = $('quizQuestionContainerWrapper');
+  containerWrapper.innerHTML = `
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; border-bottom:2px solid var(--border); padding-bottom:1rem;">
+      <h2 style="font-size:1.4rem;">📖 Complete Test Review & Answer Key</h2>
+      <button id="backToResultTopBtn" class="btn btn-secondary btn-sm">🔙 Back to Results</button>
+    </div>
+    <div id="allReviewListContainer" style="display:flex; flex-direction:column; gap:1.5rem;"></div>
+  `;
+
+  $('backToResultTopBtn').addEventListener('click', () => {
+    quizView.classList.add('hidden');
+    resultView.classList.remove('hidden');
+    // Reset layout for normal quiz later
+    $('timerDisplay').parentElement.parentElement.classList.remove('hidden');
+    $('questionPaletteAside').classList.remove('hidden');
+    $('quizMainLayoutContainer').style.gridTemplateColumns = '';
+    $('printReviewBtn').classList.add('hidden');
+    containerWrapper.innerHTML = `
+      <div class="question-header"><span id="questionCategory" class="q-category">Subject</span><button id="bookmarkBtn" class="btn btn-secondary btn-sm">🔖 Bookmark</button></div>
+      <h3 id="questionText" class="question-text">Loading question...</h3>
+      <div id="optionsContainer" class="options-container"></div>
+      <div id="explanationBox" class="explanation-box hidden"><strong>Explanation:</strong><p id="explanationText"></p></div>
+      <div class="quiz-controls" id="quizControlsBar">
+        <button id="prevQuestionBtn" class="btn btn-secondary">Previous</button>
+        <button id="clearOptionBtn" class="btn btn-secondary">Clear Selection</button>
+        <button id="nextQuestionBtn" class="btn btn-primary">Next</button>
+        <button id="submitQuizBtn" class="btn btn-success">Submit Test</button>
+      </div>
+    `;
+  });
+
+  const listContainer = $('allReviewListContainer');
+  listContainer.innerHTML = '';
+
+  activeQuizQuestions.forEach((q, index) => {
+    const qText = (typeof q.question === 'object') ? (q.question[currentLang] || q.question.en || '') : q.question;
+    const optionsArr = (typeof q.options === 'object' && !Array.isArray(q.options)) ? (q.options[currentLang] || q.options.en || []) : q.options;
+    const expl = (typeof q.explanation === 'object') ? (q.explanation[currentLang] || q.explanation.en || 'No explanation provided.') : (q.explanation || 'No explanation provided.');
+    const userAns = userAnswers[index];
+    const correctAns = q.answer;
+
+    const card = document.createElement('div');
+    card.style.cssText = "background:var(--card-bg); border:1px solid var(--border); border-radius:12px; padding:1.25rem; display:flex; flex-direction:column; gap:0.75rem;";
+    
+    let optionsHtml = '';
+    optionsArr.forEach((opt, oIdx) => {
+      let btnStyle = "padding:0.7rem 1rem; border:2px solid var(--border); border-radius:10px; background:var(--card-bg); color:var(--text); text-align:left; font-size:0.95rem; margin-bottom:0.4rem;";
+      if (oIdx === correctAns) {
+        btnStyle = "padding:0.7rem 1rem; border:2px solid var(--success); border-radius:10px; background:color-mix(in srgb, var(--success) 15%, var(--card-bg)); color:var(--success); font-weight:700; text-align:left; font-size:0.95rem; margin-bottom:0.4rem;";
+      } else if (oIdx === userAns && userAns !== correctAns) {
+        btnStyle = "padding:0.7rem 1rem; border:2px solid var(--danger); border-radius:10px; background:color-mix(in srgb, var(--danger) 15%, var(--card-bg)); color:var(--danger); font-weight:700; text-align:left; font-size:0.95rem; margin-bottom:0.4rem;";
+      }
+      optionsHtml += `<div style="${btnStyle}">${String.fromCharCode(65+oIdx)}. ${opt}</div>`;
+    });
+
+    card.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-size:0.75rem; text-transform:uppercase; font-weight:800; color:var(--primary);">Question ${index+1} (${q.subject || 'General'})</span>
+        <span style="font-size:0.8rem; font-weight:700; padding:2px 8px; border-radius:6px; background:${userAns === correctAns ? 'color-mix(in srgb, var(--success) 20%, var(--card-bg))' : 'color-mix(in srgb, var(--danger) 20%, var(--card-bg))'}; color:${userAns === correctAns ? 'var(--success)' : 'var(--danger)'};">
+          ${userAns === correctAns ? '✓ Correct' : (userAns === undefined ? '⚪ Unanswered' : '✗ Incorrect')}
+        </span>
+      </div>
+      <h4 style="font-size:1.1rem; font-weight:600;">${index+1}. ${qText}</h4>
+      <div style="display:flex; flex-direction:column; margin-top:0.3rem;">${optionsHtml}</div>
+      <div style="background:color-mix(in srgb, var(--warning) 12%, var(--card-bg)); border-left:4px solid var(--warning); padding:0.8rem; border-radius:6px; margin-top:0.4rem; font-size:0.9rem;">
+        <strong>Explanation:</strong> <p style="margin-top:0.2rem; color:var(--muted);">${expl}</p>
+      </div>
+    `;
+    listContainer.appendChild(card);
+  });
+}
+
+// Print trigger handler
+$('printReviewBtn').addEventListener('click', () => {
+  window.print();
+});
 
 function selectOption(qIdx,optIdx){
   if(reviewMode)return;
@@ -345,15 +422,7 @@ $('reviewAnswersBtn').addEventListener('click',()=>{
   reviewMode=true;
   resultView.classList.add('hidden');
   quizView.classList.remove('hidden');
-  currentIndex=0;
   loadQuestion(0);
-  $('submitQuizBtn').textContent='Back to Results';
-  $('submitQuizBtn').onclick=()=>{
-    quizView.classList.add('hidden');
-    resultView.classList.remove('hidden');
-    $('submitQuizBtn').textContent='Submit Test';
-    $('submitQuizBtn').onclick=()=>{if(confirm('Are you sure you want to submit the test?'))finishQuiz()};
-  };
 });
 
 $('themeToggleBtn').addEventListener('click',()=>{
