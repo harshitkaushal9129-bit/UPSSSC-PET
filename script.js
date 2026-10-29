@@ -438,3 +438,4 @@ function registerSW(){
 }
 
 initApp();
+registerSW();
