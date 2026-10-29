@@ -1,0 +1,43 @@
+
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#4f46e5"/>
+      <stop offset="100%" stop-color="#312e81"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="512" height="512" rx="100" fill="url(#bg)"/>
+  <rect x="100" y="70" width="312" height="372"
+        rx="28" fill="#ffffff"/>
+
+  <rect x="130" y="105" width="252" height="60"
+        rx="12" fill="#e0e7ff"/>
+
+  <text x="256" y="145"
+        font-family="Arial,sans-serif"
+        font-size="34"
+        font-weight="bold"
+        text-anchor="middle"
+        fill="#3730a3">PET QUIZ</text>
+
+  <g fill="none" stroke="#4f46e5"
+     stroke-width="15"
+     stroke-linecap="round"
+     stroke-linejoin="round">
+    <path d="M145 220 l20 20 35 -40"/>
+    <path d="M145 295 l20 20 35 -40"/>
+  </g>
+
+  <g fill="#c7d2fe">
+    <rect x="220" y="215" width="150" height="14" rx="7"/>
+    <rect x="220" y="290" width="150" height="14" rx="7"/>
+  </g>
+
+  <circle cx="256" cy="375" r="38" fill="#4f46e5"/>
+  <path d="M239 375 l12 12 24 -27"
+        fill="none" stroke="#ffffff"
+        stroke-width="9"
+        stroke-linecap="round"
+        stroke-linejoin="round"/>
+</svg>
