@@ -7,10 +7,12 @@ body{background:var(--bg);color:var(--text);line-height:1.6;min-height:100vh;-we
 button{font:inherit}
 
 /* Universal Global Sys Header */
-.global-sys-header{background:rgba(15,23,42,0.9);color:#38bdf8;padding:.4rem 1.2rem;font-size:.8rem;font-weight:700;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(255,255,255,0.1);position:sticky;top:0;z-index:1000;backdrop-filter:blur(8px)}
-.sys-info-group{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.global-sys-header{background:rgba(15,23,42,0.95);color:#38bdf8;padding:.4rem 1.2rem;font-size:.8rem;font-weight:700;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(255,255,255,0.1);position:sticky;top:0;z-index:1000;backdrop-filter:blur(8px)}
+.sys-info-group{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .sys-badge{background:linear-gradient(90deg,#ff8a00,#e52e71);color:#fff;padding:2px 8px;border-radius:4px;font-size:.75rem;animation:pulseGlow 3s infinite alternate}
 .sys-item{background:rgba(255,255,255,0.08);padding:2px 6px;border-radius:4px;font-variant-numeric:tabular-nums}
+.sys-info-btn{background:var(--primary);color:#fff;border:none;padding:2px 8px;border-radius:4px;cursor:pointer;font-weight:700;font-size:0.75rem;transition:var(--transition)}
+.sys-info-btn:hover{filter:brightness(1.1);transform:scale(1.05)}
 
 @keyframes pulseGlow{0%{filter:hue-rotate(0deg);}100%{filter:hue-rotate(360deg);}}
 
@@ -26,7 +28,7 @@ button{font:inherit}
 .welcome-banner h2{font-size:clamp(1.5rem,4vw,2.2rem);margin-bottom:.5rem;font-weight:800;letter-spacing:-0.5px}
 .welcome-banner p,.muted{color:var(--muted)}
 
-/* Card Styling: Day mode gets grey background & Orange borders; Dark mode gets Animated Neon Multiplex Borders */
+/* Card Styling */
 .config-card,.quiz-question-container,.question-palette-panel,.result-card,.quiz-header-bar{background:var(--card-bg);border:2px solid var(--border);border-radius:var(--radius);padding:clamp(1.2rem,3vw,2rem);margin-bottom:1.5rem;box-shadow:var(--shadow);transition:var(--transition)}
 
 [data-theme="dark"] .neon-card {
@@ -121,6 +123,20 @@ button{font:inherit}
 .subject-breakdown{margin:1.5rem auto 2rem;max-width:750px;text-align:left;display:grid;gap:.75rem}
 .breakdown-row{display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:.9rem 1.1rem;border:1px solid var(--border);border-radius:10px;background:var(--card-bg)}
 .result-actions{display:flex;justify-content:center;gap:.8rem;flex-wrap:wrap;margin-top:2rem}
+
+/* System Info Modal Styling */
+.sys-modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);backdrop-filter:blur(5px);z-index:2000;display:flex;justify-content:center;align-items:center;padding:1rem}
+.sys-modal-content{width:100%;max-width:400px;background:var(--card-bg);border:2px solid var(--border);border-radius:var(--radius);padding:1.8rem;box-shadow:0 20px 40px rgba(0,0,0,0.4);display:flex;flex-direction:column;gap:1.2rem}
+.sys-modal-content h2{text-align:center;font-size:1.4rem;font-weight:900;letter-spacing:1px;margin-bottom:0.5rem}
+.sys-modal-row{display:flex;justify-content:space-between;align-items:center;padding:0.6rem 0;border-bottom:1px solid var(--border);font-size:0.9rem}
+.sys-modal-row span{color:var(--muted);font-weight:700}
+.sys-modal-connectivity{display:flex;justify-content:space-between;align-items:center;padding:0.6rem 0;border-bottom:1px solid var(--border)}
+.sys-modal-connectivity span{color:var(--muted);font-weight:700;font-size:0.9rem}
+.sys-social-icons{display:flex;gap:10px;font-size:1.2rem}
+.sys-social-icons a{text-decoration:none;transition:transform 0.2s}
+.sys-social-icons a:hover{transform:scale(1.2)}
+.sys-modal-support{display:flex;justify-content:space-between;align-items:center;padding:0.6rem 0}
+.sys-modal-support span{color:var(--muted);font-weight:700;font-size:0.9rem}
 
 .profile-dropdown-container{position:relative;display:inline-block}
 .profile-icon-btn{background:none;border:none;cursor:pointer;padding:0;display:flex;align-items:center}
