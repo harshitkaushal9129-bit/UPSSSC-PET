@@ -175,12 +175,20 @@ $('emailLoginBtn').addEventListener('click', (e) => {
     .catch((error) => alert("Login Failed: " + error.message));
 });
 
-// Load Questions & Dynamically Generate Year Buttons from JSON data
+// Load Questions & Automatically Generate Unique IDs for each Question
 async function initApp(){
   try{
     const res=await fetch('questions.json');
     if(!res.ok) throw new Error('questions.json could not be loaded');
-    allQuestions=await res.json();
+    
+    const rawData = await res.json();
+    
+    // Automatic ID Mapping (1, 2, 3...)
+    allQuestions = rawData.map((q, index) => ({
+      id: index + 1,
+      ...q
+    }));
+
     if($('questionBankInfo')) $('questionBankInfo').textContent=`Question bank loaded: ${allQuestions.length} questions.`;
     
     renderDynamicYearButtons();
