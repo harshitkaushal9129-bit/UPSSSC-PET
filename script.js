@@ -26,9 +26,8 @@ const $=id=>document.getElementById(id);
 const authView=$('authView'),setupView=$('setupView'),quizView=$('quizView'),resultView=$('resultView');
 const subjectCards=[...document.querySelectorAll('.subject-card')],countCards=[...document.querySelectorAll('.count-card')];
 
-// Live Universal Header Stats Tracker (Time, Date, Network Speed, Battery)
+// Live Universal Header Stats Tracker (Time, Date, Network Speed, Battery) & Info Modal Handlers
 function initGlobalSysHeader() {
-  // Update Time & Date
   setInterval(() => {
     const now = new Date();
     const timeStr = now.toLocaleTimeString();
@@ -37,25 +36,49 @@ function initGlobalSysHeader() {
     if($('sysDateDisplay')) $('sysDateDisplay').textContent = `📅 ${dateStr}`;
   }, 1000);
 
-  // Simulated Live Data Speed (Fluctuates realistic KB/s / MB/s)
   setInterval(() => {
     const speed = (Math.random() * 2.5 + 0.1).toFixed(2);
     if($('sysNetSpeed')) $('sysNetSpeed').textContent = `⚡ ${speed} MB/s`;
   }, 3000);
 
-  // Battery Status API integration if supported
   if ('getBattery' in navigator) {
     navigator.getBattery().then(battery => {
       const updateBattery = () => {
         const level = Math.round(battery.level * 100);
         const charging = battery.charging ? '⚡' : '🔋';
         if($('sysBattery')) $('sysBattery').textContent = `${charging} ${level}%`;
+        if($('modalPowerStatus')) $('modalPowerStatus').textContent = `${level}%`;
       };
       updateBattery();
       battery.addEventListener('levelchange', updateBattery);
       battery.addEventListener('chargingchange', updateBattery);
     });
   }
+
+  // Info Modal Toggle Logic
+  const infoModal = $('systemInfoModalOverlay');
+  const qrModal = $('qrModalOverlay');
+
+  $('openInfoModalBtn').addEventListener('click', () => {
+    infoModal.classList.remove('hidden');
+  });
+
+  $('closeInfoModalBtn').addEventListener('click', () => {
+    infoModal.classList.add('hidden');
+  });
+
+  $('qrSupportBtn').addEventListener('click', () => {
+    qrModal.classList.remove('hidden');
+  });
+
+  $('closeQrModalBtn').addEventListener('click', () => {
+    qrModal.classList.add('hidden');
+  });
+
+  window.addEventListener('click', (e) => {
+    if(e.target === infoModal) infoModal.classList.add('hidden');
+    if(e.target === qrModal) qrModal.classList.add('hidden');
+  });
 }
 initGlobalSysHeader();
 
@@ -440,7 +463,7 @@ async function finishQuiz(){
 }
 
 $('restartQuizBtn').addEventListener('click',()=>{
-  clearInterval(timerInterval);
+  clearInterval(timerIdentifier);
   resultView.classList.add('hidden');
   setupView.classList.remove('hidden');
 });
