@@ -12,16 +12,17 @@
 </head>
 <body>
 
-<!-- Universal Global Header with Live System Stats & Developer Info -->
+<!-- Universal Global Header with Live System Stats & Info Button -->
 <header class="global-sys-header">
   <div class="sys-info-group">
-    <span class="sys-badge dev-badge">👨‍💻 Dev: Harshit Kaushal</span>
+    <span class="sys-badge dev-badge">👨‍💻 Harshit Kaushal</span>
     <span class="sys-item" id="sysTimeDisplay">🕒 --:--:--</span>
     <span class="sys-item" id="sysDateDisplay">📅 --/--/----</span>
   </div>
   <div class="sys-info-group">
-    <span class="sys-item" id="sysNetSpeed">⚡ 0.00 KB/s</span>
+    <span class="sys-item" id="sysNetSpeed">⚡ 0.00 MB/s</span>
     <span class="sys-item" id="sysBattery">🔋 100%</span>
+    <button id="openInfoModalBtn" class="sys-info-btn">ℹ️ Info</button>
   </div>
 </header>
 
@@ -150,6 +151,55 @@
     </div>
   </section>
 </main>
+
+<!-- System Info Modal Overlay -->
+<div id="systemInfoModalOverlay" class="sys-modal-overlay hidden">
+  <div class="sys-modal-content neon-card">
+    <h2>SYSTEM INFO</h2>
+    <div class="sys-modal-row">
+      <span>POWER STATUS</span>
+      <b id="modalPowerStatus">33%</b>
+    </div>
+    <div class="sys-modal-row">
+      <span>SOFTWARE</span>
+      <b>v2.3.1 LevelUp</b>
+    </div>
+    <div class="sys-modal-row">
+      <span>DEVELOPER</span>
+      <b style="color:var(--primary)">Harshit Kaushal</b>
+    </div>
+    
+    <div class="sys-modal-connectivity">
+      <span>CONNECTIVITY</span>
+      <div class="sys-social-icons">
+        <a href="https://whatsapp.com" target="_blank" title="WhatsApp">🟢</a>
+        <a href="tel:9129" target="_blank" title="Call">📞</a>
+        <a href="https://www.instagram.com/p/De-7rRVhte_/?srtk=MW8xbGU3ZHNjb3ZvaA==" target="_blank" title="Instagram">📸</a>
+        <a href="https://youtube.com" target="_blank" title="YouTube">▶️</a>
+      </div>
+    </div>
+
+    <div class="sys-modal-support">
+      <span>SUPPORT US</span>
+      <button id="qrSupportBtn" class="btn btn-success btn-sm">🪪 QR SUPPORT</button>
+    </div>
+
+    <button id="closeInfoModalBtn" class="btn btn-primary btn-block" style="margin-top: 1.5rem;">CLOSE PANEL</button>
+  </div>
+</div>
+
+<!-- QR Modal Popup -->
+<div id="qrModalOverlay" class="sys-modal-overlay hidden">
+  <div class="sys-modal-content neon-card" style="text-align:center;">
+    <h3>UPI / QR Support</h3>
+    <p style="margin: 1rem 0; font-size: 0.9rem; color: var(--muted);">Scan or Pay via UPI ID:</p>
+    <div style="background:var(--bg); padding:1rem; border-radius:10px; font-weight:800; font-size:1.1rem; color:var(--primary); word-break:break-all; border:1px dashed var(--border);">
+      mandavikaushal913@okaxis
+    </div>
+    <button id="closeQrModalBtn" class="btn btn-secondary btn-block" style="margin-top:1.5rem;">Back</button>
+  </div>
+</div>
+
 <script type="module" src="script.js"></script>
 </body>
 </html>
