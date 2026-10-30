@@ -183,7 +183,6 @@ async function initApp(){
     allQuestions=await res.json();
     if($('questionBankInfo')) $('questionBankInfo').textContent=`Question bank loaded: ${allQuestions.length} questions.`;
     
-    // Automatically Extract and Render Years from questions.json
     renderDynamicYearButtons();
   }catch(err){
     if($('questionBankInfo')) $('questionBankInfo').textContent='Could not load questions.json. Use a local web server (Live Server).';
@@ -197,13 +196,11 @@ function renderDynamicYearButtons() {
   if(!yearGrid) return;
   yearGrid.innerHTML = '';
 
-  // Extract unique years from allQuestions (agar kisi question me year na ho toh default 2026 maan lo)
   const yearsSet = new Set();
   allQuestions.forEach(q => {
     yearsSet.add(q.year || 2026);
   });
 
-  // Sort years in descending order (e.g., 2026, 2025, 2024...)
   const sortedYears = Array.from(yearsSet).sort((a, b) => b - a);
 
   sortedYears.forEach(year => {
@@ -247,7 +244,6 @@ $('startQuizBtn').addEventListener('click',()=>{
   
   const chosen=subjectCards.slice(1).filter(c=>c.querySelector('input').checked).map(c=>c.querySelector('input').value);
   
-  // Filter by both Subject & Selected Year from JSON
   let pool = allQuestions.filter(q => String(q.year || 2026) === String(selectedYear));
   if(!subjectCards[0].querySelector('input').checked && chosen.length > 0) {
     pool = pool.filter(q => chosen.includes(q.subject));
