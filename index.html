@@ -69,7 +69,8 @@
 
   <!-- Quiz Setup View -->
   <section id="setupView" class="view hidden">
-    <div class="welcome-banner"><h2>UPSSSC PET Exam Preparation</h2><p>Select one or more subjects and quiz length to begin your practice test.</p></div>
+    <div class="welcome-banner"><h2>UPSSSC PET Exam Preparation</h2><p>Select subjects, exam year, and quiz length to begin your practice test.</p></div>
+    
     <div class="config-card neon-card">
       <h3>1. Select Subject(s)</h3>
       <div class="subject-grid" id="subjectGrid">
@@ -88,17 +89,29 @@
         <label class="subject-card"><input type="checkbox" value="gk"><span>🌐 General Awareness</span></label>
       </div>
     </div>
+
+    <!-- Dynamic Exam Year Container (Populated automatically from JSON) -->
     <div class="config-card neon-card">
-      <h3>2. Select Number of Questions</h3>
-      <div class="count-grid" id="countGrid">
-        <button class="count-card selected" data-count="25"><b>25</b><span>Quick Practice</span><small>⏱️ 30 Mins</small></button>
-        <button class="count-card" data-count="50"><b>50</b><span>Standard Quiz</span><small>⏱️ 60 Mins</small></button>
-        <button class="count-card" data-count="75"><b>75</b><span>Advanced Practice</span><small>⏱️ 90 Mins</small></button>
-        <button class="count-card" data-count="100"><b>100</b><span>Full Mock Exam</span><small>⏱️ 120 Mins</small></button>
+      <h3>2. Select UPSSSC PET Exam Year</h3>
+      <div class="count-grid" id="yearGrid">
+        <!-- Automatically injected via JavaScript from questions.json -->
       </div>
     </div>
-    <p id="questionBankInfo" class="muted"></p>
-    <button id="startQuizBtn" class="btn btn-primary btn-block btn-lg">Start Quiz Test</button>
+
+    <!-- Hidden until Year is selected -->
+    <div id="dynamicCountAndStartContainer" style="display:none;">
+      <div class="config-card neon-card">
+        <h3>3. Select Number of Questions</h3>
+        <div class="count-grid" id="countGrid">
+          <button class="count-card selected" data-count="25"><b>25</b><span>Quick Practice</span><small>⏱️ 30 Mins</small></button>
+          <button class="count-card" data-count="50"><b>50</b><span>Standard Quiz</span><small>⏱️ 60 Mins</small></button>
+          <button class="count-card" data-count="75"><b>75</b><span>Advanced Practice</span><small>⏱️ 90 Mins</small></button>
+          <button class="count-card" data-count="100"><b>100</b><span>Full Mock Exam</span><small>⏱️ 120 Mins</small></button>
+        </div>
+      </div>
+      <p id="questionBankInfo" class="muted"></p>
+      <button id="startQuizBtn" class="btn btn-primary btn-block btn-lg">Start Quiz Test</button>
+    </div>
   </section>
 
   <!-- Quiz View -->
