@@ -19,14 +19,15 @@ const provider = new GoogleAuthProvider();
 
 let allQuestions=[],activeQuizQuestions=[],currentIndex=0,userAnswers={},bookmarked=new Set(),timerInterval=null,timeRemaining=0,reviewMode=false;
 let selectedCount=25;
+let selectedYear=null; 
 let currentLang='hi'; 
 let currentUser = null;
 
 const $=id=>document.getElementById(id);
 const authView=$('authView'),setupView=$('setupView'),quizView=$('quizView'),resultView=$('resultView');
-const subjectCards=[...document.querySelectorAll('.subject-card')],countCards=[...document.querySelectorAll('.count-card')];
+const subjectCards=[...document.querySelectorAll('.subject-card')],countCards=[...document.querySelectorAll('.count-card:not(.year-card)')];
 
-// Live Universal Header Stats Tracker (Time, Date, Network Speed, Battery) & Info Modal Handlers
+// Live Universal Header Stats Tracker
 function initGlobalSysHeader() {
   setInterval(() => {
     const now = new Date();
@@ -55,25 +56,13 @@ function initGlobalSysHeader() {
     });
   }
 
-  // Info Modal Toggle Logic
   const infoModal = $('systemInfoModalOverlay');
   const qrModal = $('qrModalOverlay');
 
-  $('openInfoModalBtn').addEventListener('click', () => {
-    infoModal.classList.remove('hidden');
-  });
-
-  $('closeInfoModalBtn').addEventListener('click', () => {
-    infoModal.classList.add('hidden');
-  });
-
-  $('qrSupportBtn').addEventListener('click', () => {
-    qrModal.classList.remove('hidden');
-  });
-
-  $('closeQrModalBtn').addEventListener('click', () => {
-    qrModal.classList.add('hidden');
-  });
+  $('openInfoModalBtn').addEventListener('click', () => { infoModal.classList.remove('hidden'); });
+  $('closeInfoModalBtn').addEventListener('click', () => { infoModal.classList.add('hidden'); });
+  $('qrSupportBtn').addEventListener('click', () => { qrModal.classList.remove('hidden'); });
+  $('closeQrModalBtn').addEventListener('click', () => { qrModal.classList.add('hidden'); });
 
   window.addEventListener('click', (e) => {
     if(e.target === infoModal) infoModal.classList.add('hidden');
@@ -127,10 +116,7 @@ onAuthStateChanged(auth, async (user) => {
       profileDropdownMenu.classList.toggle('show');
     });
 
-    window.addEventListener('click', () => {
-      profileDropdownMenu.classList.remove('show');
-    });
-
+    window.addEventListener('click', () => { profileDropdownMenu.classList.remove('show'); });
     profileDropdownMenu.addEventListener('click', (e) => e.stopPropagation());
 
     $('saveAgeBtn').addEventListener('click', async () => {
@@ -189,17 +175,57 @@ $('emailLoginBtn').addEventListener('click', (e) => {
     .catch((error) => alert("Login Failed: " + error.message));
 });
 
+// Load Questions & Dynamically Generate Year Buttons from JSON data
 async function initApp(){
   try{
     const res=await fetch('questions.json');
     if(!res.ok) throw new Error('questions.json could not be loaded');
     allQuestions=await res.json();
-    $('questionBankInfo').textContent=`Question bank loaded: ${allQuestions.length} questions.`;
+    if($('questionBankInfo')) $('questionBankInfo').textContent=`Question bank loaded: ${allQuestions.length} questions.`;
+    
+    // Automatically Extract and Render Years from questions.json
+    renderDynamicYearButtons();
   }catch(err){
-    $('questionBankInfo').textContent='Could not load questions.json. Use a local web server (Live Server).';
+    if($('questionBankInfo')) $('questionBankInfo').textContent='Could not load questions.json. Use a local web server (Live Server).';
     console.error(err);
   }
   registerSW();
+}
+
+function renderDynamicYearButtons() {
+  const yearGrid = $('yearGrid');
+  if(!yearGrid) return;
+  yearGrid.innerHTML = '';
+
+  // Extract unique years from allQuestions (agar kisi question me year na ho toh default 2026 maan lo)
+  const yearsSet = new Set();
+  allQuestions.forEach(q => {
+    yearsSet.add(q.year || 2026);
+  });
+
+  // Sort years in descending order (e.g., 2026, 2025, 2024...)
+  const sortedYears = Array.from(yearsSet).sort((a, b) => b - a);
+
+  sortedYears.forEach(year => {
+    const btn = document.createElement('button');
+    btn.className = 'count-card year-card';
+    btn.dataset.year = year;
+    btn.innerHTML = `<b>${year}</b><span>PET Exam Set</span><small>📜 Question Bank</small>`;
+    
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.year-card').forEach(c => c.classList.remove('selected'));
+      btn.classList.add('selected');
+      selectedYear = year;
+      
+      const dynamicContainer = $('dynamicCountAndStartContainer');
+      if(dynamicContainer) {
+        dynamicContainer.style.display = 'block';
+        dynamicContainer.scrollIntoView({ behavior: 'smooth' });
+      }
+    });
+
+    yearGrid.appendChild(btn);
+  });
 }
 
 subjectCards.forEach(card=>card.addEventListener('click',()=>{
@@ -216,10 +242,19 @@ subjectCards.forEach(card=>card.addEventListener('click',()=>{
 countCards.forEach(card=>card.addEventListener('click',()=>{countCards.forEach(c=>c.classList.remove('selected'));card.classList.add('selected');selectedCount=Number(card.dataset.count)}));
 
 $('startQuizBtn').addEventListener('click',()=>{
+  if(!selectedYear){alert('Kripya pehle exam year select karein!');return;}
   if(!allQuestions.length){alert('Question bank load nahi hua.');return;}
+  
   const chosen=subjectCards.slice(1).filter(c=>c.querySelector('input').checked).map(c=>c.querySelector('input').value);
-  let pool=subjectCards[0].querySelector('input').checked||chosen.length===0?allQuestions:allQuestions.filter(q=>chosen.includes(q.subject));
-  if(!pool.length){alert('Selected subjects ke liye questions available nahi hain.');return;}
+  
+  // Filter by both Subject & Selected Year from JSON
+  let pool = allQuestions.filter(q => String(q.year || 2026) === String(selectedYear));
+  if(!subjectCards[0].querySelector('input').checked && chosen.length > 0) {
+    pool = pool.filter(q => chosen.includes(q.subject));
+  }
+
+  if(!pool.length){alert('Selected year aur subjects ke liye questions available nahi hain.');return;}
+  
   pool=[...pool].sort(()=>Math.random()-.5);
   activeQuizQuestions=pool.slice(0,Math.min(selectedCount,pool.length));
   currentIndex=0;userAnswers={};bookmarked.clear();reviewMode=false;
@@ -249,7 +284,7 @@ function loadQuestion(index){
   if(!q)return;
 
   $('questionCategory').textContent=(q.subject || 'General').replace(/^\w/,c=>c.toUpperCase());
-  $('quizSubjectBadge').textContent='UPSSSC PET';
+  $('quizSubjectBadge').textContent=`UPSSSC PET (${selectedYear})`;
 
   const questionText = (typeof q.question === 'object') ? (q.question[currentLang] || q.question.en || '') : q.question;
   $('questionText').textContent=`${index+1}. ${questionText}`;
@@ -281,7 +316,7 @@ function loadQuestion(index){
 }
 
 function renderAllReviewQuestions() {
-  $('quizSubjectBadge').textContent = 'Review All Questions';
+  $('quizSubjectBadge').textContent = `Review All (${selectedYear})`;
   $('quizQuestionCountText').textContent = `Total: ${activeQuizQuestions.length} Questions`;
   $('timerDisplay').parentElement.parentElement.classList.add('hidden');
   $('questionPaletteAside').classList.add('hidden');
@@ -448,6 +483,7 @@ async function finishQuiz(){
       await setDoc(doc(collection(db, "quiz_progress")), {
         uid: currentUser.uid,
         email: currentUser.email,
+        examYear: selectedYear,
         score: score,
         maxMarks: activeQuizQuestions.length,
         correct: correct,
@@ -463,9 +499,12 @@ async function finishQuiz(){
 }
 
 $('restartQuizBtn').addEventListener('click',()=>{
-  clearInterval(timerIdentifier);
+  clearInterval(timerInterval);
   resultView.classList.add('hidden');
   setupView.classList.remove('hidden');
+  $('dynamicCountAndStartContainer').style.display = 'none';
+  selectedYear = null;
+  renderDynamicYearButtons();
 });
 
 $('reviewAnswersBtn').addEventListener('click',()=>{
