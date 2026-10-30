@@ -205,11 +205,14 @@
 <div id="qrModalOverlay" class="sys-modal-overlay hidden">
   <div class="sys-modal-content neon-card" style="text-align:center;">
     <h3>UPI / QR Support</h3>
-    <p style="margin: 1rem 0; font-size: 0.9rem; color: var(--muted);">Scan or Pay via UPI ID:</p>
-    <div style="background:var(--bg); padding:1rem; border-radius:10px; font-weight:800; font-size:1.1rem; color:var(--primary); word-break:break-all; border:1px dashed var(--border);">
+    <p style="margin: 0.5rem 0; font-size: 0.9rem; color: var(--muted);">Scan QR Code or Pay via UPI ID:</p>
+    <div style="margin: 0.8rem auto; display: inline-block; background: #fff; padding: 10px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+      <img src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=upi://pay?pa=mandavikaushal913@okaxis" alt="UPI QR Code" style="display:block; width:160px; height:160px;">
+    </div>
+    <div style="background:var(--bg); padding:0.8rem; border-radius:10px; font-weight:800; font-size:1rem; color:var(--primary); word-break:break-all; border:1px dashed var(--border); margin-top:0.5rem;">
       mandavikaushal913@okaxis
     </div>
-    <button id="closeQrModalBtn" class="btn btn-secondary btn-block" style="margin-top:1.5rem;">Back</button>
+    <button id="closeQrModalBtn" class="btn btn-secondary btn-block" style="margin-top:1.2rem;">Close</button>
   </div>
 </div>
 
