@@ -71,18 +71,43 @@ function initGlobalSysHeader() {
 }
 initGlobalSysHeader();
 
+// Share App Functionality
+const shareAppBtn = $('shareAppBtn');
+if (shareAppBtn) {
+  shareAppBtn.addEventListener('click', async () => {
+    const shareData = {
+      title: 'UPSSSC PET Exam Quiz Prep - Kaushalji',
+      text: 'UPSSSC PET Exam ki taiyari ke liye best free quiz portal try karein!',
+      url: window.location.href
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        console.log('Share canceled or failed:', err);
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        alert('App link clipboard par copy ho gaya hai!');
+      } catch (err) {
+        alert('Link copy nahi ho saka.');
+      }
+    }
+  });
+}
+
 // Toggle Register Extra Fields visibility when clicking Register button
 let isRegisterMode = false;
 $('emailRegisterBtn').addEventListener('click', () => {
   const extraFields = $('regExtraFields');
   if (!isRegisterMode) {
-    // Switch to Register Mode view
     extraFields.classList.remove('hidden');
     $('emailRegisterBtn').textContent = "Submit Registration";
     $('emailLoginBtn').textContent = "Back to Login";
     isRegisterMode = true;
   } else {
-    // Perform Registration
     const name = $('regName').value.trim();
     const email = $('authEmail').value.trim().toLowerCase();
     const password = $('authPassword').value;
@@ -129,7 +154,7 @@ $('emailRegisterBtn').addEventListener('click', () => {
 // Email Login Form Submit Handler (LocalStorage)
 $('emailAuthForm').addEventListener('submit', (e) => {
   e.preventDefault();
-  if (isRegisterMode) return; // handled by register click button
+  if (isRegisterMode) return;
 
   const email = $('authEmail').value.trim().toLowerCase();
   const password = $('authPassword').value;
@@ -458,7 +483,6 @@ async function finishQuiz(){
     $('subjectBreakdownContainer').appendChild(row);
   });
 
-  // Save Progress to Firestore or LocalStorage History
   if (currentUser) {
     let history = JSON.parse(localStorage.getItem('kaushalji_quiz_history') || '[]');
     history.push({
