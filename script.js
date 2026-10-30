@@ -26,6 +26,39 @@ const $=id=>document.getElementById(id);
 const authView=$('authView'),setupView=$('setupView'),quizView=$('quizView'),resultView=$('resultView');
 const subjectCards=[...document.querySelectorAll('.subject-card')],countCards=[...document.querySelectorAll('.count-card')];
 
+// Live Universal Header Stats Tracker (Time, Date, Network Speed, Battery)
+function initGlobalSysHeader() {
+  // Update Time & Date
+  setInterval(() => {
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString();
+    const dateStr = now.toLocaleDateString();
+    if($('sysTimeDisplay')) $('sysTimeDisplay').textContent = `🕒 ${timeStr}`;
+    if($('sysDateDisplay')) $('sysDateDisplay').textContent = `📅 ${dateStr}`;
+  }, 1000);
+
+  // Simulated Live Data Speed (Fluctuates realistic KB/s / MB/s)
+  setInterval(() => {
+    const speed = (Math.random() * 2.5 + 0.1).toFixed(2);
+    if($('sysNetSpeed')) $('sysNetSpeed').textContent = `⚡ ${speed} MB/s`;
+  }, 3000);
+
+  // Battery Status API integration if supported
+  if ('getBattery' in navigator) {
+    navigator.getBattery().then(battery => {
+      const updateBattery = () => {
+        const level = Math.round(battery.level * 100);
+        const charging = battery.charging ? '⚡' : '🔋';
+        if($('sysBattery')) $('sysBattery').textContent = `${charging} ${level}%`;
+      };
+      updateBattery();
+      battery.addEventListener('levelchange', updateBattery);
+      battery.addEventListener('chargingchange', updateBattery);
+    });
+  }
+}
+initGlobalSysHeader();
+
 onAuthStateChanged(auth, async (user) => {
   currentUser = user;
   const authContainer = $('authContainer');
@@ -224,7 +257,6 @@ function loadQuestion(index){
   updatePalette();
 }
 
-// Function to render ALL questions at once for Review & Printing
 function renderAllReviewQuestions() {
   $('quizSubjectBadge').textContent = 'Review All Questions';
   $('quizQuestionCountText').textContent = `Total: ${activeQuizQuestions.length} Questions`;
@@ -245,7 +277,6 @@ function renderAllReviewQuestions() {
   $('backToResultTopBtn').addEventListener('click', () => {
     quizView.classList.add('hidden');
     resultView.classList.remove('hidden');
-    // Reset layout for normal quiz later
     $('timerDisplay').parentElement.parentElement.classList.remove('hidden');
     $('questionPaletteAside').classList.remove('hidden');
     $('quizMainLayoutContainer').style.gridTemplateColumns = '';
@@ -305,10 +336,7 @@ function renderAllReviewQuestions() {
   });
 }
 
-// Print trigger handler
-$('printReviewBtn').addEventListener('click', () => {
-  window.print();
-});
+$('printReviewBtn').addEventListener('click', () => { window.print(); });
 
 function selectOption(qIdx,optIdx){
   if(reviewMode)return;
@@ -405,7 +433,6 @@ async function finishQuiz(){
         accuracy: accuracy,
         timestamp: serverTimestamp()
       });
-      console.log("Progress saved to Firestore!");
     } catch (e) {
       console.error("Error saving progress: ", e);
     }
