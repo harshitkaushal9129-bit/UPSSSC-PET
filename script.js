@@ -19,13 +19,12 @@ const provider = new GoogleAuthProvider();
 
 let allQuestions=[],activeQuizQuestions=[],currentIndex=0,userAnswers={},bookmarked=new Set(),timerInterval=null,timeRemaining=0,reviewMode=false;
 let selectedCount=25;
-let selectedYear=null; 
 let currentLang='hi'; 
 let currentUser = null;
 
 const $=id=>document.getElementById(id);
 const authView=$('authView'),setupView=$('setupView'),quizView=$('quizView'),resultView=$('resultView');
-const subjectCards=[...document.querySelectorAll('.subject-card')],countCards=[...document.querySelectorAll('.count-card:not(.year-card)')];
+const subjectCards=[...document.querySelectorAll('.subject-card')],countCards=[...document.querySelectorAll('.count-card')];
 
 // Live Universal Header Stats Tracker
 function initGlobalSysHeader() {
@@ -275,43 +274,12 @@ async function initApp(){
     }));
 
     if($('questionBankInfo')) $('questionBankInfo').textContent=`Question bank loaded: ${allQuestions.length} questions.`;
-    renderDynamicYearButtons();
   }catch(err){
     if($('questionBankInfo')) $('questionBankInfo').textContent='Could not load questions.json. Use a local web server.';
     console.error(err);
   }
   checkAuthSession();
   registerSW();
-}
-
-function renderDynamicYearButtons() {
-  const yearGrid = $('yearGrid');
-  if(!yearGrid) return;
-  yearGrid.innerHTML = '';
-
-  const yearsSet = new Set();
-  allQuestions.forEach(q => { yearsSet.add(q.year || 2026); });
-  const sortedYears = Array.from(yearsSet).sort((a, b) => b - a);
-
-  sortedYears.forEach(year => {
-    const btn = document.createElement('button');
-    btn.className = 'count-card year-card';
-    btn.dataset.year = year;
-    btn.innerHTML = `<b>${year}</b><span>PET Exam Set</span><small>📜 Question Bank</small>`;
-    
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.year-card').forEach(c => c.classList.remove('selected'));
-      btn.classList.add('selected');
-      selectedYear = year;
-      
-      const dynamicContainer = $('dynamicCountAndStartContainer');
-      if(dynamicContainer) {
-        dynamicContainer.style.display = 'block';
-        dynamicContainer.scrollIntoView({ behavior: 'smooth' });
-      }
-    });
-    yearGrid.appendChild(btn);
-  });
 }
 
 subjectCards.forEach(card=>card.addEventListener('click',()=>{
@@ -332,17 +300,16 @@ countCards.forEach(card=>card.addEventListener('click',()=>{
 }));
 
 $('startQuizBtn').addEventListener('click',()=>{
-  if(!selectedYear){alert('Kripya pehle exam year select karein!');return;}
   if(!allQuestions.length){alert('Question bank load nahi hua.');return;}
   
   const chosen=subjectCards.slice(1).filter(c=>c.querySelector('input').checked).map(c=>c.querySelector('input').value);
   
-  let pool = allQuestions.filter(q => String(q.year || 2026) === String(selectedYear));
+  let pool = [...allQuestions];
   if(!subjectCards[0].querySelector('input').checked && chosen.length > 0) {
     pool = pool.filter(q => chosen.includes(q.subject));
   }
 
-  if(!pool.length){alert('Selected year aur subjects ke liye questions available nahi hain.');return;}
+  if(!pool.length){alert('Selected subjects ke liye questions available nahi hain.');return;}
   
   pool=[...pool].sort(()=>Math.random()-.5);
   activeQuizQuestions=pool.slice(0,Math.min(selectedCount,pool.length));
@@ -372,7 +339,7 @@ function loadQuestion(index){
   if(!q)return;
 
   $('questionCategory').textContent=(q.subject || 'General').toUpperCase();
-  $('quizSubjectBadge').textContent=`UPSSSC PET (${selectedYear})`;
+  $('quizSubjectBadge').textContent=`UPSSSC PET Exam`;
 
   const questionText = (typeof q.question === 'object') ? (q.question[currentLang] || q.question.en || '') : q.question;
   $('questionText').textContent=`${index+1}. ${questionText}`;
@@ -487,7 +454,6 @@ async function finishQuiz(){
     let history = JSON.parse(localStorage.getItem('kaushalji_quiz_history') || '[]');
     history.push({
       email: currentUser.email || currentUser.displayName,
-      examYear: selectedYear,
       score: score.toFixed(2),
       correct,
       wrong,
@@ -501,9 +467,6 @@ async function finishQuiz(){
 $('restartQuizBtn').addEventListener('click',()=>{
   resultView.classList.add('hidden');
   setupView.classList.remove('hidden');
-  $('dynamicCountAndStartContainer').style.display = 'none';
-  selectedYear = null;
-  renderDynamicYearButtons();
 });
 
 $('reviewAnswersBtn').addEventListener('click',()=>{
@@ -514,7 +477,7 @@ $('reviewAnswersBtn').addEventListener('click',()=>{
 });
 
 function renderAllReviewQuestions() {
-  $('quizSubjectBadge').textContent = `Review (${selectedYear})`;
+  $('quizSubjectBadge').textContent = `Review - UPSSSC PET`;
   $('quizQuestionCountText').textContent = `Total: ${activeQuizQuestions.length}`;
   $('timerDisplay').parentElement.parentElement.classList.add('hidden');
   $('questionPaletteAside').classList.add('hidden');
