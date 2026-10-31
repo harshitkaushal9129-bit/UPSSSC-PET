@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#4f46e5">
+<title>UPSSSC PET Exam Quiz Prep</title>
+  <link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<meta name="theme-color" content="#4f46e5">
+<link rel="stylesheet" href="style.css">
+<link rel="manifest" href="manifest.json">
+</head>
+<body>
+<header class="app-header">
+<div class="logo"><span class="badge">UPSSSC</span><h1>PET Quiz Master</h1></div>
+<div class="header-actions" style="display:flex;align-items:center;gap:10px;">
+  <a href="data.html" class="btn btn-secondary btn-sm" target="_blank">📊 View Data</a>
+  <div id="authContainer"></div>
+  <button id="themeToggleBtn" class="btn btn-secondary">🌙 Dark</button>
+</div>
+</header>
+
+<main class="container">
+  <!-- Auth / Login Section -->
+  <section id="authView" class="view active">
+    <div class="welcome-banner">
+      <h2>Welcome to UPSSSC PET Quiz</h2>
+      <p>Please sign in to start your test and track your progress.</p>
+    </div>
+    <div class="config-card" style="max-width: 450px; margin: 0 auto; text-align: center;">
+      <h3>Sign In / Register</h3>
+      <button id="googleLoginBtn" class="btn btn-primary btn-block" style="margin-bottom: 1rem;">🔍 Sign in with Google</button>
+      <div style="margin: 1rem 0; color: var(--muted); font-weight: bold;">— athwa (OR) —</div>
+      <form id="emailAuthForm" style="display: flex; flex-direction: column; gap: 0.8rem; text-align: left;">
+        <div>
+          <label style="font-size: 0.85rem; font-weight: 600;">Email ID / Username</label>
+          <input type="email" id="authEmail" class="option-btn" style="width: 100%; margin-top: 0.3rem;" placeholder="Enter your email" required>
+        </div>
+        <div>
+          <label style="font-size: 0.85rem; font-weight: 600;">Password</label>
+          <input type="password" id="authPassword" class="option-btn" style="width: 100%; margin-top: 0.3rem;" placeholder="Enter password" required>
+        </div>
+        <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+          <button type="submit" id="emailLoginBtn" class="btn btn-primary" style="flex: 1;">Login</button>
+          <button type="button" id="emailRegisterBtn" class="btn btn-secondary" style="flex: 1;">Register</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- Quiz Setup View -->
+  <section id="setupView" class="view hidden">
+    <div class="welcome-banner"><h2>UPSSSC PET Exam Preparation</h2><p>Select one or more subjects and quiz length to begin your practice test.</p></div>
+    <div class="config-card">
+      <h3>1. Select Subject(s)</h3>
+      <div class="subject-grid" id="subjectGrid">
+        <label class="subject-card selected"><input type="checkbox" value="all" checked><span>📚 All Subjects (Full Syllabus)</span></label>
+        <label class="subject-card"><input type="checkbox" value="history"><span>🏛️ Indian History</span></label>
+        <label class="subject-card"><input type="checkbox" value="movement"><span>🚩 National Movement</span></label>
+        <label class="subject-card"><input type="checkbox" value="geography"><span>🌍 Geography</span></label>
+        <label class="subject-card"><input type="checkbox" value="economy"><span>📈 Indian Economy</span></label>
+        <label class="subject-card"><input type="checkbox" value="polity"><span>📜 Constitution & Public Admin</span></label>
+        <label class="subject-card"><input type="checkbox" value="science"><span>🔬 General Science</span></label>
+        <label class="subject-card"><input type="checkbox" value="maths"><span>🔢 Elementary Arithmetic</span></label>
+        <label class="subject-card"><input type="checkbox" value="hindi"><span>✍️ General Hindi</span></label>
+        <label class="subject-card"><input type="checkbox" value="english"><span>🔤 General English</span></label>
+        <label class="subject-card"><input type="checkbox" value="reasoning"><span>🧩 Logic & Reasoning</span></label>
+        <label class="subject-card"><input type="checkbox" value="current"><span>📰 Current Affairs</span></label>
+        <label class="subject-card"><input type="checkbox" value="gk"><span>🌐 General Awareness</span></label>
+      </div>
+    </div>
+    <div class="config-card">
+      <h3>2. Select Number of Questions</h3>
+      <div class="count-grid" id="countGrid">
+        <button class="count-card selected" data-count="25"><b>25</b><span>Quick Practice</span><small>⏱️ 30 Mins</small></button>
+        <button class="count-card" data-count="50"><b>50</b><span>Standard Quiz</span><small>⏱️ 60 Mins</small></button>
+        <button class="count-card" data-count="75"><b>75</b><span>Advanced Practice</span><small>⏱️ 90 Mins</small></button>
+        <button class="count-card" data-count="100"><b>100</b><span>Full Mock Exam</span><small>⏱️ 120 Mins</small></button>
+      </div>
+    </div>
+    <p id="questionBankInfo" class="muted"></p>
+    <button id="startQuizBtn" class="btn btn-primary btn-block btn-lg">Start Quiz Test</button>
+  </section>
+
+  <!-- Quiz View -->
+  <section id="quizView" class="view hidden">
+    <div class="quiz-header-bar">
+      <div><span id="quizSubjectBadge" class="badge">General</span> <span id="quizQuestionCountText">Question 1</span></div>
+      <div style="display:flex; gap:10px; align-items:center;">
+        <button id="printReviewBtn" class="btn btn-secondary btn-sm hidden" style="background:var(--primary);color:#white;">🖨️ Print / Save PDF</button>
+        <div class="timer-box">⏱️ <span id="timerDisplay">30:00</span></div>
+      </div>
+    </div>
+    <div class="quiz-main-layout" id="quizMainLayoutContainer">
+      <div class="quiz-question-container" id="quizQuestionContainerWrapper">
+        <div class="question-header"><span id="questionCategory" class="q-category">Subject</span><button id="bookmarkBtn" class="btn btn-secondary btn-sm">🔖 Bookmark</button></div>
+        <h3 id="questionText" class="question-text">Loading question...</h3>
+        <div id="optionsContainer" class="options-container"></div>
+        <div id="explanationBox" class="explanation-box hidden"><strong>Explanation:</strong><p id="explanationText"></p></div>
+        <div class="quiz-controls" id="quizControlsBar">
+          <button id="prevQuestionBtn" class="btn btn-secondary">Previous</button>
+          <button id="clearOptionBtn" class="btn btn-secondary">Clear Selection</button>
+          <button id="nextQuestionBtn" class="btn btn-primary">Next</button>
+          <button id="submitQuizBtn" class="btn btn-success">Submit Test</button>
+        </div>
+      </div>
+      <aside class="question-palette-panel" id="questionPaletteAside">
+        <h4>Question Palette</h4><div id="paletteGrid" class="palette-grid"></div>
+        <div class="palette-legend">
+          <div><i class="legend-dot current"></i> Current</div><div><i class="legend-dot answered"></i> Answered</div>
+          <div><i class="legend-dot bookmarked"></i> Bookmarked</div><div><i class="legend-dot unvisited"></i> Unanswered</div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- Result View -->
+  <section id="resultView" class="view hidden">
+    <div class="result-card">
+      <h2>Quiz Performance Summary</h2>
+      <div class="score-summary">
+        <div class="score-circle"><span id="finalScore">0.00</span><small id="maxScore">/ 25 Marks</small></div>
+        <div class="stats-grid">
+          <div class="stat-item positive"><b id="statCorrect">0</b><span>Correct (+1)</span></div>
+          <div class="stat-item negative"><b id="statWrong">0</b><span>Incorrect (-0.25)</span></div>
+          <div class="stat-item neutral"><b id="statUnanswered">0</b><span>Unanswered</span></div>
+          <div class="stat-item"><b id="statAccuracy">0%</b><span>Accuracy</span></div>
+        </div>
+      </div>
+      <h3>Subject Breakdown</h3><div id="subjectBreakdownContainer" class="subject-breakdown"></div>
+      <div class="result-actions"><button id="restartQuizBtn" class="btn btn-primary">Take Another Test</button><button id="reviewAnswersBtn" class="btn btn-secondary">Review Answers</button></div>
+    </div>
+  </section>
+</main>
+<script type="module" src="script.js"></script>
+</body>
+</html>
