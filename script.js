@@ -27,6 +27,77 @@ const $=id=>document.getElementById(id);
 const authView=$('authView'),setupView=$('setupView'),quizView=$('quizView'),resultView=$('resultView');
 const subjectCards=[...document.querySelectorAll('.subject-card')],countCards=[...document.querySelectorAll('.count-card')];
 
+// --- SYSTEM STATS & INFO MODAL ---
+function initSystemStats() {
+  // Live Date/Time & QR Code setup
+  const upiString = "upi://pay?pa=mandavikaushal913@okaxis&pn=Kaushalji&cu=INR";
+  if($('upiQrImg')) {
+    $('upiQrImg').src = `https://api.qrserver.com/v1/create-qr-code/?size=130x130&data=${encodeURIComponent(upiString)}`;
+  }
+
+  setInterval(() => {
+    const now = new Date();
+    if($('modalLiveTime')) $('modalLiveTime').textContent = now.toLocaleTimeString();
+  }, 1000);
+
+  // Battery Status API
+  if (navigator.getBattery) {
+    navigator.getBattery().then(battery => {
+      const updateBattery = () => {
+        const pct = Math.round(battery.level * 100);
+        if($('sysBattery')) $('sysBattery').textContent = `⚡ Battery: ${pct}%`;
+        if($('modalBattery')) $('modalBattery').textContent = `${pct}% ${battery.charging ? '(Charging 🔌)' : ''}`;
+      };
+      updateBattery();
+      battery.addEventListener('levelchange', updateBattery);
+      battery.addEventListener('chargingchange', updateBattery);
+    });
+  } else {
+    if($('sysBattery')) $('sysBattery').textContent = `⚡ Battery: N/A`;
+    if($('modalBattery')) $('modalBattery').textContent = `Not supported by browser`;
+  }
+
+  // Network Connection status
+  const updateNetwork = () => {
+    const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    const speed = conn ? `${conn.downlink || 'Fast'} Mbps (${conn.effectiveType || '4G'})` : 'Online';
+    if($('sysNetwork')) $('sysNetwork').textContent = `📶 ${navigator.onLine ? 'Online' : 'Offline'}`;
+    if($('modalNetwork')) $('modalNetwork').textContent = speed;
+  };
+  updateNetwork();
+  window.addEventListener('online', updateNetwork);
+  window.addEventListener('offline', updateNetwork);
+
+  // Modal Event Listeners
+  if($('sysInfoBtn')) {
+    $('sysInfoBtn').addEventListener('click', () => $('appInfoModal').classList.remove('hidden'));
+  }
+  if($('closeModalBtn')) {
+    $('closeModalBtn').addEventListener('click', () => $('appInfoModal').classList.add('hidden'));
+  }
+  window.addEventListener('click', (e) => {
+    if(e.target === $('appInfoModal')) $('appInfoModal').classList.add('hidden');
+  });
+
+  // Share App Button
+  if($('shareAppBtn')) {
+    $('shareAppBtn').addEventListener('click', async () => {
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: 'UPSSSC PET Quiz Master',
+            text: 'Prepare for UPSSSC PET 2026 with mock tests and quizzes!',
+            url: window.location.href,
+          });
+        } catch (err) { console.log('Share canceled'); }
+      } else {
+        navigator.clipboard.writeText(window.location.href);
+        alert('📋 App Link Copied to Clipboard!');
+      }
+    });
+  }
+}
+
 // --- CAPTCHA GENERATOR ---
 function generateCaptcha() {
   const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
@@ -40,7 +111,6 @@ function generateCaptcha() {
 
 // --- AUTHENTICATION STATE HANDLER ---
 function checkAuthStatus() {
-  // Check Local Storage first
   const localUser = localStorage.getItem('local_quiz_user');
   if (localUser) {
     currentUser = JSON.parse(localUser);
@@ -48,7 +118,6 @@ function checkAuthStatus() {
     return;
   }
 
-  // Otherwise check Firebase Google Auth
   onAuthStateChanged(auth, (user) => {
     if (user && !localStorage.getItem('local_quiz_user')) {
       currentUser = {
@@ -160,9 +229,7 @@ $('localRegisterForm').addEventListener('submit', (e) => {
     return;
   }
 
-  // Get existing users from localStorage or initialize empty array
   let users = JSON.parse(localStorage.getItem('local_quiz_users') || '[]');
-  
   if (users.some(u => u.email === email)) {
     alert('⚠️ Yeh email pehle se registered hai! Kripya Login karein.');
     return;
@@ -172,7 +239,6 @@ $('localRegisterForm').addEventListener('submit', (e) => {
   users.push(newUser);
   localStorage.setItem('local_quiz_users', JSON.stringify(users));
 
-  // Auto login after registration
   localStorage.setItem('local_quiz_user', JSON.stringify({
     uid: newUser.uid,
     email: newUser.email,
@@ -211,6 +277,7 @@ $('localLoginForm').addEventListener('submit', (e) => {
 
 // --- INIT APP ---
 async function initApp(){
+  initSystemStats();
   try{
     const res=await fetch('questions.json');
     if(!res.ok) throw new Error('questions.json could not be loaded');
