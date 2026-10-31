@@ -11,13 +11,24 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<header class="app-header">
-<div class="logo"><span class="badge">UPSSSC</span><h1>PET Quiz Master</h1></div>
-<div class="header-actions" style="display:flex;align-items:center;gap:10px;">
-  <a href="data.html" class="btn btn-secondary btn-sm" target="_blank">📊 View Data</a>
-  <div id="authContainer"></div>
-  <button id="themeToggleBtn" class="btn btn-secondary">🌙 Dark</button>
+
+<!-- Universal Global Sys Header -->
+<div class="global-sys-header">
+  <div class="sys-info-group">
+    <span class="sys-badge">UPSSSC PET</span>
+    <span class="sys-item">🎯 Target 2026</span>
+    <span class="sys-item">⚡ Mode: Offline Ready</span>
+  </div>
+  <button id="sysInfoBtn" class="sys-info-btn">ℹ️ Info</button>
 </div>
+
+<header class="app-header">
+  <div class="logo"><span class="badge">UPSSSC</span><h1>PET Quiz Master</h1></div>
+  <div class="header-actions" style="display:flex;align-items:center;gap:10px;">
+    <a href="data.html" class="btn btn-secondary btn-sm" target="_blank">📊 View Data</a>
+    <div id="authContainer"></div>
+    <button id="themeToggleBtn" class="btn btn-secondary">🌙 Dark</button>
+  </div>
 </header>
 
 <main class="container">
@@ -28,15 +39,15 @@
       <p>Please sign in or register to start your test and track your progress.</p>
     </div>
     
-    <div class="config-card" style="max-width: 480px; margin: 0 auto;">
+    <div class="config-card neon-card" style="max-width: 480px; margin: 0 auto;">
       <!-- Toggle Tabs for Login / Register -->
       <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; border-bottom: 2px solid var(--border); padding-bottom: 0.75rem;">
-        <button id="showLoginTab" class="btn btn-primary" style="flex: 1;">Login</button>
-        <button id="showRegisterTab" class="btn btn-secondary" style="flex: 1;">Register</button>
+        <button type="button" id="showLoginTab" class="btn btn-primary" style="flex: 1;">Login</button>
+        <button type="button" id="showRegisterTab" class="btn btn-secondary" style="flex: 1;">Register</button>
       </div>
 
-      <!-- Google Sign In (Always available) -->
-      <button id="googleLoginBtn" class="btn btn-secondary btn-block" style="margin-bottom: 1.2rem; display: flex; align-items: center; justify-content: center; gap: 8px;">
+      <!-- Google Sign In -->
+      <button type="button" id="googleLoginBtn" class="google-btn" style="margin-bottom: 1.2rem;">
         <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.13 0-5.78-2.11-6.73-4.96H1.19v3.15C3.17 21.31 7.27 24 12 24z"/><path fill="#FBBC05" d="M5.27 14.24c-.25-.72-.38-1.49-.38-2.24s.13-1.52.38-2.24V6.61H1.19C.43 8.13 0 9.87 0 11.7s.43 3.57 1.19 5.09l4.08-2.55z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.27 0 3.17 2.69 1.19 6.61l4.08 3.15c.95-2.85 3.6-4.96 6.73-4.96z"/></svg>
         Sign in with Google
       </button>
@@ -82,7 +93,7 @@
         <div>
           <label style="font-size: 0.85rem; font-weight: 600;">Security Captcha Verification</label>
           <div style="display: flex; gap: 10px; align-items: center; margin-top: 0.3rem;">
-            <div id="captchaBox" style="background: var(--border); padding: 0.5rem 1rem; font-weight: bold; letter-spacing: 3px; border-radius: 6px; font-family: monospace; user-select: none;"></div>
+            <div id="captchaBox" style="background: var(--border); color: #fff; padding: 0.5rem 1rem; font-weight: bold; letter-spacing: 3px; border-radius: 6px; font-family: monospace; user-select: none;"></div>
             <button type="button" id="refreshCaptchaBtn" class="btn btn-secondary btn-sm" style="padding: 0.5rem;">🔄</button>
           </div>
           <input type="text" id="regCaptchaInput" class="option-btn" style="width: 100%; margin-top: 0.4rem;" placeholder="Enter captcha code" required>
@@ -116,14 +127,14 @@
     <div class="config-card">
       <h3>2. Select Number of Questions</h3>
       <div class="count-grid" id="countGrid">
-        <button class="count-card selected" data-count="25"><b>25</b><span>Quick Practice</span><small>⏱️ 30 Mins</small></button>
-        <button class="count-card" data-count="50"><b>50</b><span>Standard Quiz</span><small>⏱️ 60 Mins</small></button>
-        <button class="count-card" data-count="75"><b>75</b><span>Advanced Practice</span><small>⏱️ 90 Mins</small></button>
-        <button class="count-card" data-count="100"><b>100</b><span>Full Mock Exam</span><small>⏱️ 120 Mins</small></button>
+        <button type="button" class="count-card selected" data-count="25"><b>25</b><span>Quick Practice</span><small>⏱️ 30 Mins</small></button>
+        <button type="button" class="count-card" data-count="50"><b>50</b><span>Standard Quiz</span><small>⏱️ 60 Mins</small></button>
+        <button type="button" class="count-card" data-count="75"><b>75</b><span>Advanced Practice</span><small>⏱️ 90 Mins</small></button>
+        <button type="button" class="count-card" data-count="100"><b>100</b><span>Full Mock Exam</span><small>⏱️ 120 Mins</small></button>
       </div>
     </div>
     <p id="questionBankInfo" class="muted"></p>
-    <button id="startQuizBtn" class="btn btn-primary btn-block btn-lg">Start Quiz Test</button>
+    <button type="button" id="startQuizBtn" class="btn btn-primary btn-block btn-lg">Start Quiz Test</button>
   </section>
 
   <!-- Quiz View -->
@@ -131,21 +142,21 @@
     <div class="quiz-header-bar">
       <div><span id="quizSubjectBadge" class="badge">General</span> <span id="quizQuestionCountText">Question 1</span></div>
       <div style="display:flex; gap:10px; align-items:center;">
-        <button id="printReviewBtn" class="btn btn-secondary btn-sm hidden" style="background:var(--primary);color:#white;">🖨️ Print / Save PDF</button>
+        <button type="button" id="printReviewBtn" class="btn btn-secondary btn-sm hidden" style="background:var(--primary);color:#fff;">🖨️ Print / Save PDF</button>
         <div class="timer-box">⏱️ <span id="timerDisplay">30:00</span></div>
       </div>
     </div>
     <div class="quiz-main-layout" id="quizMainLayoutContainer">
       <div class="quiz-question-container" id="quizQuestionContainerWrapper">
-        <div class="question-header"><span id="questionCategory" class="q-category">Subject</span><button id="bookmarkBtn" class="btn btn-secondary btn-sm">🔖 Bookmark</button></div>
+        <div class="question-header"><span id="questionCategory" class="q-category">Subject</span><button type="button" id="bookmarkBtn" class="btn btn-secondary btn-sm">🔖 Bookmark</button></div>
         <h3 id="questionText" class="question-text">Loading question...</h3>
         <div id="optionsContainer" class="options-container"></div>
         <div id="explanationBox" class="explanation-box hidden"><strong>Explanation:</strong><p id="explanationText"></p></div>
         <div class="quiz-controls" id="quizControlsBar">
-          <button id="prevQuestionBtn" class="btn btn-secondary">Previous</button>
-          <button id="clearOptionBtn" class="btn btn-secondary">Clear Selection</button>
-          <button id="nextQuestionBtn" class="btn btn-primary">Next</button>
-          <button id="submitQuizBtn" class="btn btn-success">Submit Test</button>
+          <button type="button" id="prevQuestionBtn" class="btn btn-secondary">Previous</button>
+          <button type="button" id="clearOptionBtn" class="btn btn-secondary">Clear Selection</button>
+          <button type="button" id="nextQuestionBtn" class="btn btn-primary">Next</button>
+          <button type="button" id="submitQuizBtn" class="btn btn-success">Submit Test</button>
         </div>
       </div>
       <aside class="question-palette-panel" id="questionPaletteAside">
@@ -172,7 +183,10 @@
         </div>
       </div>
       <h3>Subject Breakdown</h3><div id="subjectBreakdownContainer" class="subject-breakdown"></div>
-      <div class="result-actions"><button id="restartQuizBtn" class="btn btn-primary">Take Another Test</button><button id="reviewAnswersBtn" class="btn btn-secondary">Review Answers</button></div>
+      <div class="result-actions">
+        <button type="button" id="restartQuizBtn" class="btn btn-primary">Take Another Test</button>
+        <button type="button" id="reviewAnswersBtn" class="btn btn-secondary">Review Answers</button>
+      </div>
     </div>
   </section>
 </main>
