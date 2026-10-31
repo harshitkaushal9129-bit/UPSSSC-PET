@@ -1,6 +1,6 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { getFirestore, collection, doc, setDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { getFirestore, collection, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAsSV2NvqEyXEk92xHNfi9MCPbQxPDvm8g",
@@ -21,94 +21,122 @@ let allQuestions=[],activeQuizQuestions=[],currentIndex=0,userAnswers={},bookmar
 let selectedCount=25;
 let currentLang='hi'; 
 let currentUser = null;
+let currentCaptcha = '';
 
 const $=id=>document.getElementById(id);
 const authView=$('authView'),setupView=$('setupView'),quizView=$('quizView'),resultView=$('resultView');
 const subjectCards=[...document.querySelectorAll('.subject-card')],countCards=[...document.querySelectorAll('.count-card')];
 
-onAuthStateChanged(auth, async (user) => {
-  currentUser = user;
-  const authContainer = $('authContainer');
-  if (user) {
-    let userAge = '';
-    try {
-      const userDocRef = doc(db, "users", user.uid);
-      const userSnap = await getDoc(userDocRef);
-      if (userSnap.exists()) {
-        userAge = userSnap.data().age || '';
-      }
-    } catch(err) { console.error(err); }
-
-    authContainer.innerHTML = `
-      <div class="profile-dropdown-container">
-        <button id="profileToggleBtn" class="profile-icon-btn">
-          <img src="${user.photoURL || 'https://via.placeholder.com/40'}" alt="Profile" class="profile-icon-img">
-        </button>
-        <div id="profileDropdownMenu" class="profile-dropdown-menu">
-          <div class="profile-user-info">
-            <img src="${user.photoURL || 'https://via.placeholder.com/40'}" alt="User">
-            <div class="profile-user-details">
-              <h4>${user.displayName || 'User'}</h4>
-              <p>${user.email}</p>
-            </div>
-          </div>
-          <div style="display:flex;flex-direction:column;gap:0.4rem;">
-            <label style="font-size:0.8rem;font-weight:600;">Aapki Age (Umar):</label>
-            <div style="display:flex;gap:0.4rem;">
-              <input type="number" id="userAgeInput" class="option-btn" style="padding:0.4rem;font-size:0.9rem;" value="${userAge}" placeholder="Enter age">
-              <button id="saveAgeBtn" class="btn btn-primary btn-sm">Save</button>
-            </div>
-          </div>
-          <button id="logoutBtn" class="btn btn-secondary btn-sm btn-block" style="margin-top:0.3rem;">Logout</button>
-        </div>
-      </div>
-    `;
-
-    const profileToggleBtn = $('profileToggleBtn');
-    const profileDropdownMenu = $('profileDropdownMenu');
-    profileToggleBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      profileDropdownMenu.classList.toggle('show');
-    });
-
-    window.addEventListener('click', () => {
-      profileDropdownMenu.classList.remove('show');
-    });
-
-    profileDropdownMenu.addEventListener('click', (e) => e.stopPropagation());
-
-    $('saveAgeBtn').addEventListener('click', async () => {
-      const ageVal = $('userAgeInput').value;
-      try {
-        await setDoc(doc(db, "users", user.uid), {
-          uid: user.uid,
-          email: user.email,
-          displayName: user.displayName || 'User',
-          photoURL: user.photoURL || '',
-          age: ageVal,
-          updatedAt: serverTimestamp()
-        }, { merge: true });
-        alert("Age successfully saved to Firebase!");
-        profileDropdownMenu.classList.remove('show');
-      } catch(e) {
-        console.error("Error saving age:", e);
-        alert("Failed to save age.");
-      }
-    });
-
-    $('logoutBtn').addEventListener('click', () => signOut(auth));
-    
-    authView.classList.add('hidden');
-    setupView.classList.remove('hidden');
-  } else {
-    authContainer.innerHTML = '';
-    setupView.classList.add('hidden');
-    quizView.classList.add('hidden');
-    resultView.classList.add('hidden');
-    authView.classList.remove('hidden');
+// --- CAPTCHA GENERATOR ---
+function generateCaptcha() {
+  const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+  let captcha = '';
+  for (let i = 0; i < 6; i++) {
+    captcha += chars.charAt(Math.floor(Math.random() * chars.length));
   }
+  currentCaptcha = captcha;
+  if ($('captchaBox')) $('captchaBox').textContent = captcha;
+}
+
+// --- AUTHENTICATION STATE HANDLER ---
+function checkAuthStatus() {
+  // Check Local Storage first
+  const localUser = localStorage.getItem('local_quiz_user');
+  if (localUser) {
+    currentUser = JSON.parse(localUser);
+    renderUserProfile(currentUser);
+    return;
+  }
+
+  // Otherwise check Firebase Google Auth
+  onAuthStateChanged(auth, (user) => {
+    if (user && !localStorage.getItem('local_quiz_user')) {
+      currentUser = {
+        uid: user.uid,
+        email: user.email,
+        displayName: user.displayName || 'Google User',
+        photoURL: user.photoURL || 'https://via.placeholder.com/40',
+        mobile: 'N/A'
+      };
+      renderUserProfile(currentUser);
+    } else if (!localUser) {
+      currentUser = null;
+      renderLoggedOutState();
+    }
+  });
+}
+
+function renderUserProfile(user) {
+  const authContainer = $('authContainer');
+  authContainer.innerHTML = `
+    <div class="profile-dropdown-container">
+      <button id="profileToggleBtn" class="profile-icon-btn">
+        <img src="${user.photoURL || 'https://via.placeholder.com/40'}" alt="Profile" class="profile-icon-img">
+      </button>
+      <div id="profileDropdownMenu" class="profile-dropdown-menu">
+        <div class="profile-user-info">
+          <img src="${user.photoURL || 'https://via.placeholder.com/40'}" alt="User">
+          <div class="profile-user-details">
+            <h4>${user.displayName}</h4>
+            <p>${user.email}</p>
+            <p style="font-size:0.75rem; color:var(--muted);">📱 ${user.mobile || 'No mobile'}</p>
+          </div>
+        </div>
+        <button id="logoutBtn" class="btn btn-secondary btn-sm btn-block" style="margin-top:0.5rem;">Logout</button>
+      </div>
+    </div>
+  `;
+
+  $('profileToggleBtn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    $('profileDropdownMenu').classList.toggle('show');
+  });
+
+  window.addEventListener('click', () => {
+    const menu = $('profileDropdownMenu');
+    if(menu) menu.classList.remove('show');
+  });
+
+  $('logoutBtn').addEventListener('click', () => {
+    localStorage.removeItem('local_quiz_user');
+    signOut(auth).catch(() => {});
+    currentUser = null;
+    renderLoggedOutState();
+  });
+  
+  authView.classList.add('hidden');
+  setupView.classList.remove('hidden');
+}
+
+function renderLoggedOutState() {
+  const authContainer = $('authContainer');
+  authContainer.innerHTML = '';
+  setupView.classList.add('hidden');
+  quizView.classList.add('hidden');
+  resultView.classList.add('hidden');
+  authView.classList.remove('hidden');
+  generateCaptcha();
+}
+
+// --- TAB SWITCHING (Login / Register) ---
+$('showLoginTab').addEventListener('click', () => {
+  $('showLoginTab').className = 'btn btn-primary';
+  $('showRegisterTab').className = 'btn btn-secondary';
+  $('localLoginForm').style.display = 'flex';
+  $('localRegisterForm').style.display = 'none';
 });
 
+$('showRegisterTab').addEventListener('click', () => {
+  $('showRegisterTab').className = 'btn btn-primary';
+  $('showLoginTab').className = 'btn btn-secondary';
+  $('localRegisterForm').style.display = 'flex';
+  $('localLoginForm').style.display = 'none';
+  generateCaptcha();
+});
+
+$('refreshCaptchaBtn').addEventListener('click', generateCaptcha);
+
+// --- GOOGLE LOGIN ---
 $('googleLoginBtn').addEventListener('click', () => {
   signInWithPopup(auth, provider).catch((error) => {
     console.error("Google Auth Error:", error);
@@ -116,23 +144,72 @@ $('googleLoginBtn').addEventListener('click', () => {
   });
 });
 
-$('emailRegisterBtn').addEventListener('click', () => {
-  const email = $('authEmail').value;
-  const password = $('authPassword').value;
-  if(!email || !password) { alert('Kripya Email aur Password bharein!'); return; }
-  createUserWithEmailAndPassword(auth, email, password)
-    .catch((error) => alert("Registration Failed: " + error.message));
-});
-
-$('emailLoginBtn').addEventListener('click', (e) => {
+// --- LOCAL STORAGE REGISTRATION ---
+$('localRegisterForm').addEventListener('submit', (e) => {
   e.preventDefault();
-  const email = $('authEmail').value;
-  const password = $('authPassword').value;
-  if(!email || !password) { alert('Kripya Email aur Password bharein!'); return; }
-  signInWithEmailAndPassword(auth, email, password)
-    .catch((error) => alert("Login Failed: " + error.message));
+  const name = $('regName').value.trim();
+  const email = $('regEmail').value.trim();
+  const mobile = $('regMobile').value.trim();
+  const password = $('regPassword').value;
+  const photo = $('regPhoto').value.trim() || 'https://via.placeholder.com/40';
+  const captchaInput = $('regCaptchaInput').value.trim();
+
+  if (captchaInput !== currentCaptcha) {
+    alert('❌ Invalid Captcha Code! Kripya sahi captcha bharein.');
+    generateCaptcha();
+    return;
+  }
+
+  // Get existing users from localStorage or initialize empty array
+  let users = JSON.parse(localStorage.getItem('local_quiz_users') || '[]');
+  
+  if (users.some(u => u.email === email)) {
+    alert('⚠️ Yeh email pehle se registered hai! Kripya Login karein.');
+    return;
+  }
+
+  const newUser = { uid: 'local_' + Date.now(), name, email, mobile, password, photo };
+  users.push(newUser);
+  localStorage.setItem('local_quiz_users', JSON.stringify(users));
+
+  // Auto login after registration
+  localStorage.setItem('local_quiz_user', JSON.stringify({
+    uid: newUser.uid,
+    email: newUser.email,
+    displayName: newUser.name,
+    photoURL: newUser.photo,
+    mobile: newUser.mobile
+  }));
+
+  alert('✅ Registration Successful!');
+  checkAuthStatus();
 });
 
+// --- LOCAL STORAGE LOGIN ---
+$('localLoginForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const email = $('loginEmail').value.trim();
+  const password = $('loginPassword').value;
+
+  let users = JSON.parse(localStorage.getItem('local_quiz_users') || '[]');
+  const validUser = users.find(u => u.email === email && u.password === password);
+
+  if (validUser) {
+    localStorage.setItem('local_quiz_user', JSON.stringify({
+      uid: validUser.uid,
+      email: validUser.email,
+      displayName: validUser.name,
+      photoURL: validUser.photo,
+      mobile: validUser.mobile
+    }));
+    alert('🎉 Login Successful!');
+    checkAuthStatus();
+  } else {
+    alert('❌ Invalid Email ya Password! Kripya dobara koshish karein.');
+  }
+});
+
+// --- INIT APP ---
 async function initApp(){
   try{
     const res=await fetch('questions.json');
@@ -143,6 +220,7 @@ async function initApp(){
     $('questionBankInfo').textContent='Could not load questions.json. Use a local web server (Live Server).';
     console.error(err);
   }
+  checkAuthStatus();
   registerSW();
 }
 
@@ -224,7 +302,6 @@ function loadQuestion(index){
   updatePalette();
 }
 
-// Function to render ALL questions at once for Review & Printing
 function renderAllReviewQuestions() {
   $('quizSubjectBadge').textContent = 'Review All Questions';
   $('quizQuestionCountText').textContent = `Total: ${activeQuizQuestions.length} Questions`;
@@ -245,7 +322,6 @@ function renderAllReviewQuestions() {
   $('backToResultTopBtn').addEventListener('click', () => {
     quizView.classList.add('hidden');
     resultView.classList.remove('hidden');
-    // Reset layout for normal quiz later
     $('timerDisplay').parentElement.parentElement.classList.remove('hidden');
     $('questionPaletteAside').classList.remove('hidden');
     $('quizMainLayoutContainer').style.gridTemplateColumns = '';
@@ -305,10 +381,7 @@ function renderAllReviewQuestions() {
   });
 }
 
-// Print trigger handler
-$('printReviewBtn').addEventListener('click', () => {
-  window.print();
-});
+$('printReviewBtn').addEventListener('click', () => { window.print(); });
 
 function selectOption(qIdx,optIdx){
   if(reviewMode)return;
@@ -438,4 +511,3 @@ function registerSW(){
 }
 
 initApp();
-registerSW();
