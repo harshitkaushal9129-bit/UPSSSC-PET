@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#4f46e5">
-<title>UPSSSC PET Exam Quiz Prep</title>
+<title>UPSSSC PET Exam Quiz Prep - Kaushalji</title>
 <link rel="manifest" href="./manifest.json">
 <link rel="icon" href="./icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="./icon-192.png">
@@ -17,9 +17,59 @@
   <div class="sys-info-group">
     <span class="sys-badge">UPSSSC PET</span>
     <span class="sys-item">🎯 Target 2026</span>
-    <span class="sys-item">⚡ Mode: Offline Ready</span>
+    <span class="sys-item" id="sysBattery">⚡ Battery: --%</span>
+    <span class="sys-item" id="sysNetwork">📶 Status: Online</span>
   </div>
-  <button id="sysInfoBtn" class="sys-info-btn">ℹ️ Info</button>
+  <button id="sysInfoBtn" class="sys-info-btn">ℹ️ App Info</button>
+</div>
+
+<!-- APP INFO MODAL / DRAWER -->
+<div id="appInfoModal" class="modal-overlay hidden">
+  <div class="modal-content neon-card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px solid var(--border); padding-bottom:0.5rem;">
+      <h3 style="color:var(--primary); font-size:1.2rem;">🛠️ App & Support Information</h3>
+      <button id="closeModalBtn" class="btn btn-secondary btn-sm" style="padding:0.2rem 0.6rem;">✕</button>
+    </div>
+    
+    <div style="display:flex; flex-direction:column; gap:1rem; font-size:0.9rem;">
+      <!-- System Stats -->
+      <div style="background:var(--border); padding:0.75rem; border-radius:8px;">
+        <p><strong>📱 App Version:</strong> v2.5.0 (PWA Offline)</p>
+        <p><strong>🕒 Current Time:</strong> <span id="modalLiveTime">--:--:--</span></p>
+        <p><strong>🔋 Battery Level:</strong> <span id="modalBattery">Loading...</span></p>
+        <p><strong>🌐 Network Speed / Type:</strong> <span id="modalNetwork">Checking...</span></p>
+      </div>
+
+      <!-- Contact & Help Desk -->
+      <div style="display:flex; flex-direction:column; gap:0.5rem;">
+        <h4 style="font-size:0.95rem; color:var(--text);">📞 Help Desk & Support</h4>
+        <div style="display:flex; gap:0.5rem;">
+          <a href="tel:9129191898" class="btn btn-primary btn-sm" style="flex:1; text-align:center;">📞 Call Support</a>
+          <a href="https://wa.me/919129191898?text=Hello%20Kaushalji,%20I%20need%20help%20with%20UPSSSC%20PET%20Quiz" target="_blank" class="btn btn-success btn-sm" style="flex:1; text-align:center; background:#25D366; border-color:#25D366; color:#fff;">💬 WhatsApp</a>
+        </div>
+      </div>
+
+      <!-- YouTube Channel -->
+      <div>
+        <h4 style="font-size:0.95rem; color:var(--text); margin-bottom:0.3rem;">📺 Official YouTube Channel</h4>
+        <a href="https://youtube.com/@devil_king.01r?si=p_hHCzXp6lZ_jvNs" target="_blank" class="btn btn-secondary btn-sm btn-block" style="text-align:center;">
+          🔴 Visit Devil King YouTube
+        </a>
+      </div>
+
+      <!-- UPI QR Code Section -->
+      <div style="text-align:center; background:var(--card-bg); border:1px solid var(--border); padding:0.75rem; border-radius:8px;">
+        <h4 style="font-size:0.95rem; margin-bottom:0.4rem;">🪙 Support / Donate (UPI QR)</h4>
+        <p style="font-size:0.8rem; color:var(--muted); margin-bottom:0.5rem;">UPI ID: <code style="color:var(--primary);">mandavikaushal913@okaxis</code></p>
+        <div style="background:#fff; padding:10px; display:inline-block; border-radius:8px;">
+          <img id="upiQrImg" src="" alt="UPI QR Code" style="width:130px; height:130px; display:block; margin:0 auto;">
+        </div>
+      </div>
+
+      <!-- Share App Button -->
+      <button id="shareAppBtn" class="btn btn-primary btn-block">🔗 Share App with Friends</button>
+    </div>
+  </div>
 </div>
 
 <header class="app-header">
@@ -67,7 +117,7 @@
         <button type="submit" class="btn btn-primary btn-block" style="margin-top: 0.5rem;">Login to Quiz</button>
       </form>
 
-      <!-- Local Registration Form (Hidden by default) -->
+      <!-- Local Registration Form -->
       <form id="localRegisterForm" style="display: none; flex-direction: column; gap: 0.8rem;">
         <div>
           <label style="font-size: 0.85rem; font-weight: 600;">Full Name</label>
