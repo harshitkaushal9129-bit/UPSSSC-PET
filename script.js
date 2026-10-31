@@ -27,12 +27,11 @@ const $=id=>document.getElementById(id);
 const authView=$('authView'),setupView=$('setupView'),quizView=$('quizView'),resultView=$('resultView');
 const subjectCards=[...document.querySelectorAll('.subject-card')],countCards=[...document.querySelectorAll('.count-card')];
 
-// --- SYSTEM STATS & INFO MODAL ---
+// --- SYSTEM STATS & STICKY INFO DROPDOWN ---
 function initSystemStats() {
-  // Live Date/Time & QR Code setup
   const upiString = "upi://pay?pa=mandavikaushal913@okaxis&pn=Kaushalji&cu=INR";
   if($('upiQrImg')) {
-    $('upiQrImg').src = `https://api.qrserver.com/v1/create-qr-code/?size=130x130&data=${encodeURIComponent(upiString)}`;
+    $('upiQrImg').src = `https://api.qrserver.com/v1/create-qr-code/?size=110x110&data=${encodeURIComponent(upiString)}`;
   }
 
   setInterval(() => {
@@ -40,7 +39,6 @@ function initSystemStats() {
     if($('modalLiveTime')) $('modalLiveTime').textContent = now.toLocaleTimeString();
   }, 1000);
 
-  // Battery Status API
   if (navigator.getBattery) {
     navigator.getBattery().then(battery => {
       const updateBattery = () => {
@@ -54,10 +52,9 @@ function initSystemStats() {
     });
   } else {
     if($('sysBattery')) $('sysBattery').textContent = `⚡ Battery: N/A`;
-    if($('modalBattery')) $('modalBattery').textContent = `Not supported by browser`;
+    if($('modalBattery')) $('modalBattery').textContent = `Not supported`;
   }
 
-  // Network Connection status
   const updateNetwork = () => {
     const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
     const speed = conn ? `${conn.downlink || 'Fast'} Mbps (${conn.effectiveType || '4G'})` : 'Online';
@@ -68,25 +65,33 @@ function initSystemStats() {
   window.addEventListener('online', updateNetwork);
   window.addEventListener('offline', updateNetwork);
 
-  // Modal Event Listeners
-  if($('sysInfoBtn')) {
-    $('sysInfoBtn').addEventListener('click', () => $('appInfoModal').classList.remove('hidden'));
+  // Dropdown Toggle Handlers
+  if($('sysInfoBtn') && $('appInfoDropdown')) {
+    $('sysInfoBtn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      $('appInfoDropdown').classList.toggle('hidden');
+    });
   }
-  if($('closeModalBtn')) {
-    $('closeModalBtn').addEventListener('click', () => $('appInfoModal').classList.add('hidden'));
+  if($('closeInfoBtn')) {
+    $('closeInfoBtn').addEventListener('click', () => {
+      $('appInfoDropdown').classList.add('hidden');
+    });
   }
   window.addEventListener('click', (e) => {
-    if(e.target === $('appInfoModal')) $('appInfoModal').classList.add('hidden');
+    const dropdown = $('appInfoDropdown');
+    const infoBtn = $('sysInfoBtn');
+    if (dropdown && !dropdown.classList.contains('hidden') && !dropdown.contains(e.target) && e.target !== infoBtn) {
+      dropdown.classList.add('hidden');
+    }
   });
 
-  // Share App Button
   if($('shareAppBtn')) {
     $('shareAppBtn').addEventListener('click', async () => {
       if (navigator.share) {
         try {
           await navigator.share({
             title: 'UPSSSC PET Quiz Master',
-            text: 'Prepare for UPSSSC PET 2026 with mock tests and quizzes!',
+            text: 'Prepare for UPSSSC PET 2026 with mock tests!',
             url: window.location.href,
           });
         } catch (err) { console.log('Share canceled'); }
