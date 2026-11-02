@@ -1,9 +1,30 @@
-:root{--primary:#4f46e5;--primary-hover:#4338ca;--bg:#e2e8f0;--card-bg:#ffffff;--text:#0f172a;--muted:#64748b;--border:#f97316;--success:#10b981;--danger:#ef4444;--warning:#f59e0b;--radius:16px;--shadow:0 10px 30px -5px rgba(15,23,42,0.1);--transition:all 0.3s cubic-bezier(0.4,0,0.2,1)}
+:root {
+  --primary: #4f46e5;
+  --primary-hover: #4338ca;
+  --bg: #e2e8f0;
+  --card-bg: #ffffff;
+  --text: #0f172a;
+  --muted: #64748b;
+  --border: #f97316;
+  --success: #10b981;
+  --danger: #ef4444;
+  --warning: #f59e0b;
+  --radius: 16px;
+  --shadow: 0 10px 30px -5px rgba(15,23,42,0.1);
+  --transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+}
 
-[data-theme="dark"]{--bg:#070b14;--card-bg:#111827;--text:#f8fafc;--muted:#9ca3af;--border:#3b82f6;--shadow:0 10px 30px -5px rgba(0,0,0,0.5)}
+[data-theme="dark"] {
+  --bg: #070b14;
+  --card-bg: #111827;
+  --text: #f8fafc;
+  --muted: #9ca3af;
+  --border: #3b82f6;
+  --shadow: 0 10px 30px -5px rgba(0,0,0,0.5);
+}
 
 *{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-body{background:var(--bg);color:var(--text);line-height:1.6;min-height:100vh;-webkit-font-smoothing:antialiased;transition:background 0.4s ease}
+body{background:var(--bg);color:var(--text);line-height:1.6;min-height:100vh;-webkit-font-smoothing:antialiased;transition:background 0.4s ease, color 0.4s ease}
 button{font:inherit}
 
 /* Universal Global Sys Header */
@@ -17,7 +38,7 @@ button{font:inherit}
 
 @keyframes pulseGlow{0%{filter:hue-rotate(0deg);transform:scale(1);}100%{filter:hue-rotate(360deg);transform:scale(1.05);}}
 
-/* STICKY FLOATING APP INFO DIV (Z-INDEX 1001, NOT FULL SCREEN) */
+/* STICKY FLOATING APP INFO DIV */
 .app-info-dropdown{position:fixed;top:45px;right:15px;width:340px;background:var(--card-bg);border:2px solid var(--primary);border-radius:var(--radius);padding:1.2rem;box-shadow:0 15px 40px rgba(0,0,0,0.35);z-index:1001;display:flex;flex-direction:column;gap:1rem;backdrop-filter:blur(16px);animation: slideDownDropdown 0.3s cubic-bezier(0.16,1,0.3,1)}
 .app-info-dropdown.hidden{display:none!important}
 
