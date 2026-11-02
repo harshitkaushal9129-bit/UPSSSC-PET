@@ -27,6 +27,25 @@ const $=id=>document.getElementById(id);
 const authView=$('authView'),setupView=$('setupView'),quizView=$('quizView'),resultView=$('resultView');
 const subjectCards=[...document.querySelectorAll('.subject-card')],countCards=[...document.querySelectorAll('.count-card')];
 
+// --- THEME MANAGEMENT SYSTEM ---
+function initTheme() {
+  const savedTheme = localStorage.getItem('upsssc_theme') || 'dark';
+  document.body.setAttribute('data-theme', savedTheme);
+  if($('themeToggleBtn')) {
+    $('themeToggleBtn').textContent = savedTheme === 'dark' ? '☀️ Light' : '🌙 Dark';
+  }
+}
+
+if($('themeToggleBtn')) {
+  $('themeToggleBtn').addEventListener('click', () => {
+    const currentTheme = document.body.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    document.body.setAttribute('data-theme', newTheme);
+    localStorage.setItem('upsssc_theme', newTheme);
+    $('themeToggleBtn').textContent = newTheme === 'dark' ? '☀️ Light' : '🌙 Dark';
+  });
+}
+
 // --- SYSTEM STATS & STICKY INFO DROPDOWN ---
 function initSystemStats() {
   const upiString = "upi://pay?pa=mandavikaushal913@okaxis&pn=Kaushalji&cu=INR";
@@ -65,7 +84,6 @@ function initSystemStats() {
   window.addEventListener('online', updateNetwork);
   window.addEventListener('offline', updateNetwork);
 
-  // Dropdown Toggle Handlers
   if($('sysInfoBtn') && $('appInfoDropdown')) {
     $('sysInfoBtn').addEventListener('click', (e) => {
       e.stopPropagation();
@@ -192,7 +210,6 @@ function renderLoggedOutState() {
   generateCaptcha();
 }
 
-// --- TAB SWITCHING (Login / Register) ---
 $('showLoginTab').addEventListener('click', () => {
   $('showLoginTab').className = 'btn btn-primary';
   $('showRegisterTab').className = 'btn btn-secondary';
@@ -210,7 +227,6 @@ $('showRegisterTab').addEventListener('click', () => {
 
 $('refreshCaptchaBtn').addEventListener('click', generateCaptcha);
 
-// --- GOOGLE LOGIN ---
 $('googleLoginBtn').addEventListener('click', () => {
   signInWithPopup(auth, provider).catch((error) => {
     console.error("Google Auth Error:", error);
@@ -218,7 +234,6 @@ $('googleLoginBtn').addEventListener('click', () => {
   });
 });
 
-// --- LOCAL STORAGE REGISTRATION ---
 $('localRegisterForm').addEventListener('submit', (e) => {
   e.preventDefault();
   const name = $('regName').value.trim();
@@ -256,7 +271,6 @@ $('localRegisterForm').addEventListener('submit', (e) => {
   checkAuthStatus();
 });
 
-// --- LOCAL STORAGE LOGIN ---
 $('localLoginForm').addEventListener('submit', (e) => {
   e.preventDefault();
   const email = $('loginEmail').value.trim();
@@ -280,8 +294,8 @@ $('localLoginForm').addEventListener('submit', (e) => {
   }
 });
 
-// --- INIT APP ---
 async function initApp(){
+  initTheme();
   initSystemStats();
   try{
     const res=await fetch('questions.json');
@@ -568,12 +582,6 @@ $('reviewAnswersBtn').addEventListener('click',()=>{
   resultView.classList.add('hidden');
   quizView.classList.remove('hidden');
   loadQuestion(0);
-});
-
-$('themeToggleBtn').addEventListener('click',()=>{
-  const dark=document.body.getAttribute('data-theme')==='dark';
-  document.body.setAttribute('data-theme',dark?'light':'dark');
-  $('themeToggleBtn').textContent=dark?'🌙 Dark':'☀️ Light';
 });
 
 function registerSW(){
