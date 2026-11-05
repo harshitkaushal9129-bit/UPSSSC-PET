@@ -17,15 +17,26 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
-let allQuestions = [], activeQuizQuestions = [], currentIndex = 0, userAnswers = {}, bookmarked = new Set(), timerInterval = null, timeRemaining = 0, reviewMode = false;
+let allQuestions = [];
+let activeQuizQuestions = [];
+let currentIndex = 0;
+let userAnswers = {};
+let bookmarked = new Set();
+let timerInterval = null;
+let timeRemaining = 0;
+let reviewMode = false;
 let selectedCount = 25;
 let currentLang = 'hi'; 
 let currentUser = null;
 let currentCaptchaAnswer = 0;
 
 const $ = id => document.getElementById(id);
-const authView = $('authView'), setupView = $('setupView'), quizView = $('quizView'), resultView = $('resultView');
-const subjectCards = [...document.querySelectorAll('.subject-card')], countCards = [...document.querySelectorAll('.count-card')];
+const authView = $('authView');
+const setupView = $('setupView');
+const quizView = $('quizView');
+const resultView = $('resultView');
+const subjectCards = [...document.querySelectorAll('.subject-card')];
+const countCards = [...document.querySelectorAll('.count-card')];
 
 function generateCaptcha() {
   const num1 = Math.floor(Math.random() * 10) + 1;
@@ -266,14 +277,26 @@ $('emailLoginBtn').addEventListener('click', (e) => {
   signInWithEmailAndPassword(auth, email, password).catch((error) => alert("Login Failed: " + error.message));
 });
 
-async function initApp(){
-  try{
+async function initApp() {
+  try {
     const res = await fetch('questions.json');
-    if(!res.ok) throw new Error();
-    allQuestions = await res.json();
-    $('questionBankInfo').textContent = `Question bank loaded: ${allQuestions.length} questions.`;
-  }catch(err){
-    $('questionBankInfo').textContent = 'Could not load questions.json. Make sure questions.json is in directory.';
+    if(!res.ok) throw new Error('Failed to load questions.json');
+    const rawData = await res.json();
+    
+    // Pro-level safety: Automatically assign dynamic IDs if missing in JSON
+    allQuestions = rawData.map((q, idx) => ({
+      id: q.id || `q_${idx + 1}`,
+      subject: q.subject || 'general',
+      question: q.question,
+      options: q.options,
+      answer: q.answer,
+      explanation: q.explanation || 'No explanation provided.'
+    }));
+
+    $('questionBankInfo').textContent = `Question bank loaded: ${allQuestions.length} questions available.`;
+  } catch (err) {
+    $('questionBankInfo').textContent = 'Could not load questions.json. Please ensure it is in the root directory.';
+    console.error(err);
   }
 }
 
@@ -296,17 +319,24 @@ countCards.forEach(card => card.addEventListener('click', () => {
 }));
 
 $('startQuizBtn').addEventListener('click', () => {
-  if(!allQuestions.length) { alert('Question bank load nahi hua.'); return; }
+  if(!allQuestions.length) { alert('Question bank abhi load nahi hua hai.'); return; }
   const chosen = subjectCards.slice(1).filter(c => c.querySelector('input').checked).map(c => c.querySelector('input').value);
   let pool = subjectCards[0].querySelector('input').checked || chosen.length === 0 ? allQuestions : allQuestions.filter(q => chosen.includes(q.subject));
-  if(!pool.length) { alert('Selected subjects ke liye questions available nahi hain.'); return; }
+  if(!pool.length) { alert('Selected subjects ke liye koi questions nahi mile.'); return; }
+  
   pool = [...pool].sort(() => Math.random() - .5);
   activeQuizQuestions = pool.slice(0, Math.min(selectedCount, pool.length));
   currentIndex = 0; userAnswers = {}; bookmarked.clear(); reviewMode = false;
-  setupView.classList.add('hidden'); resultView.classList.add('hidden'); quizView.classList.remove('hidden');
+  
+  setupView.classList.add('hidden'); 
+  resultView.classList.add('hidden'); 
+  quizView.classList.remove('hidden');
+  
   timeRemaining = Math.ceil(activeQuizQuestions.length * 72);
   $('timerDisplay').textContent = formatTime(timeRemaining);
-  startTimer(); renderPalette(); loadQuestion(0);
+  startTimer(); 
+  renderPalette(); 
+  loadQuestion(0);
 });
 
 function formatTime(seconds) {
@@ -329,8 +359,8 @@ function loadQuestion(index) {
 
   $('questionCategory').textContent = (q.subject || 'General').toUpperCase();
   const qText = (typeof q.question === 'object') ? (q.question[currentLang] || q.question.en || '') : q.question;
-  $('questionText').textContent = `${index+1}. ${qText}`;
-  $('quizQuestionCountText').textContent = `Question ${index+1} of ${activeQuizQuestions.length}`;
+  $('questionText').textContent = `${index + 1}. ${qText}`;
+  $('quizQuestionCountText').textContent = `Question ${index + 1} of ${activeQuizQuestions.length}`;
 
   const container = $('optionsContainer');
   container.innerHTML = '';
@@ -339,7 +369,7 @@ function loadQuestion(index) {
   optionsArr.forEach((opt, idx) => {
     const btn = document.createElement('button');
     btn.className = 'option-btn';
-    btn.textContent = `${String.fromCharCode(65+idx)}. ${opt}`;
+    btn.textContent = `${String.fromCharCode(65 + idx)}. ${opt}`;
     if(userAnswers[index] === idx) btn.classList.add('selected');
     btn.addEventListener('click', () => selectOption(index, idx));
     container.appendChild(btn);
@@ -405,13 +435,13 @@ function renderAllReviewQuestions() {
       let bStyle = "padding:0.6rem; border:1px solid var(--border); border-radius:8px; background:var(--card-bg); font-size:0.9rem;";
       if (oIdx === correctAns) bStyle = "padding:0.6rem; border:2px solid var(--success); background:color-mix(in srgb, var(--success) 15%, var(--card-bg)); color:var(--success); font-weight:700;";
       else if (oIdx === userAns) bStyle = "padding:0.6rem; border:2px solid var(--danger); background:color-mix(in srgb, var(--danger) 15%, var(--card-bg)); color:var(--danger); font-weight:700;";
-      optionsHtml += `<div style="${bStyle}">${String.fromCharCode(65+oIdx)}. ${opt}</div>`;
+      optionsHtml += `<div style="${bStyle}">${String.fromCharCode(65 + oIdx)}. ${opt}</div>`;
     });
 
     card.innerHTML = `
       <div style="display:flex; justify-content:space-between; font-size:0.8rem; font-weight:700; color:var(--primary);">
-        <span>Question ${index+1}</span>
-        <span>${userAns === correctAns ? '✓ Correct' : '✗ Incorrect'}</span>
+        <span>Question ${index + 1} (${q.subject.toUpperCase()})</span>
+        <span>${userAns === correctAns ? '✓ Correct' : (userAns === undefined ? '⚪ Unanswered' : '✗ Incorrect')}</span>
       </div>
       <h4 style="font-size:1rem;">${qText}</h4>
       <div style="display:flex; flex-direction:column; gap:4px;">${optionsHtml}</div>
@@ -460,7 +490,7 @@ $('bookmarkBtn').addEventListener('click', () => {
 $('prevQuestionBtn').addEventListener('click', () => { if(currentIndex > 0) { currentIndex--; loadQuestion(currentIndex); } });
 $('nextQuestionBtn').addEventListener('click', () => { if(currentIndex < activeQuizQuestions.length - 1) { currentIndex++; loadQuestion(currentIndex); } });
 $('clearOptionBtn').addEventListener('click', () => { delete userAnswers[currentIndex]; loadQuestion(currentIndex); });
-$('submitQuizBtn').addEventListener('click', () => { if(confirm('Submit test?')) finishQuiz(); });
+$('submitQuizBtn').addEventListener('click', () => { if(confirm('Are you sure you want to submit the test?')) finishQuiz(); });
 
 async function finishQuiz() {
   clearInterval(timerInterval);
@@ -480,7 +510,9 @@ async function finishQuiz() {
     else { wrong++; bySubject[s].wrong++; }
   });
 
-  const score = correct - wrong * .25, accuracy = correct + wrong ? Math.round(correct / (correct + wrong) * 100) : 0;
+  const score = correct - wrong * .25;
+  const accuracy = correct + wrong ? Math.round(correct / (correct + wrong) * 100) : 0;
+  
   $('finalScore').textContent = score.toFixed(2);
   $('maxScore').textContent = `/ ${activeQuizQuestions.length} Marks`;
   $('statCorrect').textContent = correct;
@@ -502,7 +534,7 @@ async function finishQuiz() {
       await setDoc(doc(collection(db, "quiz_progress")), {
         uid: currentUser.uid, email: currentUser.email, score, maxMarks: activeQuizQuestions.length, correct, wrong, unanswered, accuracy, timestamp: serverTimestamp()
       });
-    } catch (e) {}
+    } catch (e) { console.error(e); }
   }
 }
 
