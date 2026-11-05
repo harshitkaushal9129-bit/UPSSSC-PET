@@ -21,38 +21,145 @@ let allQuestions=[],activeQuizQuestions=[],currentIndex=0,userAnswers={},bookmar
 let selectedCount=25;
 let currentLang='hi'; 
 let currentUser = null;
+let currentCaptchaAnswer = 0;
 
 const $=id=>document.getElementById(id);
 const authView=$('authView'),setupView=$('setupView'),quizView=$('quizView'),resultView=$('resultView');
 const subjectCards=[...document.querySelectorAll('.subject-card')],countCards=[...document.querySelectorAll('.count-card')];
 
+// --- CAPTCHA GENERATOR ---
+function generateCaptcha() {
+  const num1 = Math.floor(Math.random() * 10) + 1;
+  const num2 = Math.floor(Math.random() * 10) + 1;
+  currentCaptchaAnswer = num1 + num2;
+  const captchaLabel = $('captchaLabel');
+  if (captchaLabel) {
+    captchaLabel.textContent = `Security Check: What is ${num1} + ${num2}?`;
+  }
+}
+
+// Toggle between Login and Register tabs inside Auth View
+document.addEventListener('DOMContentLoaded', () => {
+  generateCaptcha();
+  
+  // Create Tabs dynamically if not present in HTML
+  const authCard = document.querySelector('.auth-card') || authView;
+  if (authCard && !$('authTabsContainer')) {
+    const tabHTML = document.createElement('div');
+    tabHTML.id = 'authTabsContainer';
+    tabHTML.style.cssText = "display:flex; gap:10px; margin-bottom:1rem; border-bottom:2px solid var(--border); padding-bottom:0.5rem;";
+    tabHTML.innerHTML = `
+      <button id="showLoginTab" class="btn btn-primary btn-sm" style="flex:1;">Login</button>
+      <button id="showRegisterTab" class="btn btn-secondary btn-sm" style="flex:1;">Register / Signup</button>
+    `;
+    authCard.prepend(tabHTML);
+
+    // Add extra fields container for Register
+    const extraFields = document.createElement('div');
+    extraFields.id = 'registerExtraFields';
+    extraFields.style.display = 'none';
+    extraFields.style.flexDirection = 'column';
+    extraFields.style.gap = '0.75rem';
+    extraFields.style.marginTop = '0.75rem';
+    extraFields.innerHTML = `
+      <input type="text" id="regFullName" class="option-btn" placeholder="Full Name (Pura Naam)" style="padding:0.7rem; width:100%;">
+      <input type="tel" id="regMobile" class="option-btn" placeholder="Mobile Number (Mobile No.)" style="padding:0.7rem; width:100%;">
+      <label style="font-size:0.85rem; font-weight:600; color:var(--muted);">Profile Photo Upload:</label>
+      <input type="file" id="regProfilePic" accept="image/*" class="option-btn" style="padding:0.5rem; width:100%;">
+      <div style="display:flex; align-items:center; gap:10px; background:color-mix(in srgb, var(--primary) 10%, var(--card-bg)); padding:0.6rem; border-radius:8px;">
+        <span id="captchaLabel" style="font-weight:700; font-size:0.9rem;">Security Check: 5 + 3?</span>
+        <input type="number" id="regCaptchaInput" class="option-btn" placeholder="Ans" style="width:80px; padding:0.4rem; text-align:center;">
+      </div>
+    `;
+    
+    // Insert before submit buttons or email input
+    const emailInput = $('authEmail');
+    if (emailInput && emailInput.parentNode) {
+      emailInput.parentNode.insertBefore(extraFields, emailInput);
+    }
+
+    let isRegisterMode = false;
+    $('showRegisterTab').addEventListener('click', () => {
+      isRegisterMode = true;
+      extraFields.style.display = 'flex';
+      $('showRegisterTab').className = 'btn btn-primary btn-sm';
+      $('showLoginTab').className = 'btn btn-secondary btn-sm';
+      $('emailLoginBtn').style.display = 'none';
+      $('emailRegisterBtn').style.display = 'block';
+      generateCaptcha();
+    });
+
+    $('showShowLoginTab' || 'showLoginTab').addEventListener('click', () => {
+      isRegisterMode = false;
+      extraFields.style.display = 'none';
+      $('showLoginTab').className = 'btn btn-primary btn-sm';
+      $('showRegisterTab').className = 'btn btn-secondary btn-sm';
+      $('emailRegisterBtn').style.display = 'none';
+      $('emailLoginBtn').style.display = 'block';
+    });
+    
+    // Initially hide register button
+    const regBtn = $('emailRegisterBtn');
+    if(regBtn) regBtn.style.display = 'none';
+  }
+});
+
+// Helper to convert image file to Base64 for LocalStorage caching
+function convertImageToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = error => reject(error);
+    reader.readAsDataURL(file);
+  });
+}
+
 onAuthStateChanged(auth, async (user) => {
-  currentUser = user;
-  const authContainer = $('authContainer');
-  if (user) {
-    let userAge = '';
+  // Check LocalStorage session first if Firebase user is null
+  let activeUser = user;
+  const localUserJson = localStorage.getItem('kaushalji_local_user');
+  if (!activeUser && localUserJson) {
     try {
-      const userDocRef = doc(db, "users", user.uid);
-      const userSnap = await getDoc(userDocRef);
-      if (userSnap.exists()) {
-        userAge = userSnap.data().age || '';
+      activeUser = JSON.parse(localUserJson);
+    } catch(e) { console.error(e); }
+  }
+
+  currentUser = activeUser;
+  const authContainer = $('authContainer');
+  
+  if (activeUser) {
+    let userAge = '';
+    let userMobile = activeUser.mobile || '';
+    let userFullName = activeUser.displayName || activeUser.fullName || 'User';
+    let userPhoto = activeUser.photoURL || 'https://via.placeholder.com/40';
+
+    try {
+      if(activeUser.uid && !activeUser.isLocal) {
+        const userDocRef = doc(db, "users", activeUser.uid);
+        const userSnap = await getDoc(userDocRef);
+        if (userSnap.exists()) {
+          userAge = userSnap.data().age || '';
+          userMobile = userSnap.data().mobile || '';
+        }
       }
     } catch(err) { console.error(err); }
 
     authContainer.innerHTML = `
       <div class="profile-dropdown-container">
-        <button id="profileToggleBtn" class="profile-icon-btn">
-          <img src="${user.photoURL || 'https://via.placeholder.com/40'}" alt="Profile" class="profile-icon-img">
+        <button id="profileToggleBtn" class="profile-icon-btn" style="display:flex; align-items:center; gap:8px; background:var(--card-bg); border:1px solid var(--border); border-radius:50px; padding:4px 12px; cursor:pointer;">
+          <img src="${userPhoto}" alt="Profile" class="profile-icon-img" style="width:32px; height:32px; border-radius:50%; object-fit:cover;">
+          <span style="font-weight:600; font-size:0.9rem;">${userFullName.split(' ')[0]}</span>
         </button>
         <div id="profileDropdownMenu" class="profile-dropdown-menu">
-          <div class="profile-user-info">
-            <img src="${user.photoURL || 'https://via.placeholder.com/40'}" alt="User">
+          <div class="profile-user-info" style="display:flex; gap:10px; align-items:center; margin-bottom:0.75rem; border-bottom:1px solid var(--border); padding-bottom:0.75rem;">
+            <img src="${userPhoto}" alt="User" style="width:45px; height:45px; border-radius:50%; object-fit:cover;">
             <div class="profile-user-details">
-              <h4>${user.displayName || 'User'}</h4>
-              <p>${user.email}</p>
+              <h4 style="margin:0; font-size:1rem;">${userFullName}</h4>
+              <p style="margin:0; font-size:0.8rem; color:var(--muted);">${activeUser.email}</p>
+              ${userMobile ? `<p style="margin:0; font-size:0.8rem; color:var(--success);">📱 ${userMobile}</p>` : ''}
             </div>
           </div>
-          <div style="display:flex;flex-direction:column;gap:0.4rem;">
+          <div style="display:flex;flex-direction:column;gap:0.4rem; margin-bottom:0.75rem;">
             <label style="font-size:0.8rem;font-weight:600;">Aapki Age (Umar):</label>
             <div style="display:flex;gap:0.4rem;">
               <input type="number" id="userAgeInput" class="option-btn" style="padding:0.4rem;font-size:0.9rem;" value="${userAge}" placeholder="Enter age">
@@ -80,15 +187,16 @@ onAuthStateChanged(auth, async (user) => {
     $('saveAgeBtn').addEventListener('click', async () => {
       const ageVal = $('userAgeInput').value;
       try {
-        await setDoc(doc(db, "users", user.uid), {
-          uid: user.uid,
-          email: user.email,
-          displayName: user.displayName || 'User',
-          photoURL: user.photoURL || '',
-          age: ageVal,
-          updatedAt: serverTimestamp()
-        }, { merge: true });
-        alert("Age successfully saved to Firebase!");
+        if(activeUser.uid && !activeUser.isLocal) {
+          await setDoc(doc(db, "users", activeUser.uid), {
+            uid: activeUser.uid,
+            email: activeUser.email,
+            displayName: userFullName,
+            age: ageVal,
+            updatedAt: serverTimestamp()
+          }, { merge: true });
+        }
+        alert("Age successfully saved!");
         profileDropdownMenu.classList.remove('show');
       } catch(e) {
         console.error("Error saving age:", e);
@@ -96,7 +204,11 @@ onAuthStateChanged(auth, async (user) => {
       }
     });
 
-    $('logoutBtn').addEventListener('click', () => signOut(auth));
+    $('logoutBtn').addEventListener('click', async () => {
+      localStorage.removeItem('kaushalji_local_user');
+      try { await signOut(auth); } catch(e){}
+      window.location.reload();
+    });
     
     authView.classList.add('hidden');
     setupView.classList.remove('hidden');
@@ -116,21 +228,96 @@ $('googleLoginBtn').addEventListener('click', () => {
   });
 });
 
-$('emailRegisterBtn').addEventListener('click', () => {
+// Custom Registration with LocalStorage & Firebase Support
+$('emailRegisterBtn').addEventListener('click', async () => {
   const email = $('authEmail').value;
   const password = $('authPassword').value;
-  if(!email || !password) { alert('Kripya Email aur Password bharein!'); return; }
-  createUserWithEmailAndPassword(auth, email, password)
-    .catch((error) => alert("Registration Failed: " + error.message));
+  const fullName = $('regFullName') ? $('regFullName').value : '';
+  const mobile = $('regMobile') ? $('regMobile').value : '';
+  const captchaInput = $('regCaptchaInput') ? parseInt($('regCaptchaInput').value) : NaN;
+
+  if(!email || !password || !fullName || !mobile) { 
+    alert('Kripya Sabhi Fields (Name, Mobile, Email, Password) bharein!'); 
+    return; 
+  }
+  
+  if (isNaN(captchaInput) || captchaInput !== currentCaptchaAnswer) {
+    alert('Galat Captcha! Kripya sahi calculation likhein.');
+    generateCaptcha();
+    return;
+  }
+
+  let photoBase64 = 'https://via.placeholder.com/150';
+  const fileInput = $('regProfilePic');
+  if (fileInput && fileInput.files && fileInput.files[0]) {
+    try {
+      photoBase64 = await convertImageToBase64(fileInput.files[0]);
+    } catch(err) {
+      console.error("Image conversion error:", err);
+    }
+  }
+
+  // Try Firebase Registration first
+  try {
+    const cred = await createUserWithEmailAndPassword(auth, email, password);
+    const user = cred.user;
+    await setDoc(doc(db, "users", user.uid), {
+      uid: user.uid,
+      email: email,
+      fullName: fullName,
+      mobile: mobile,
+      photoURL: photoBase64,
+      createdAt: serverTimestamp()
+    });
+    alert('Firebase Registration Successful!');
+  } catch (error) {
+    console.warn("Firebase registration fallback to LocalStorage:", error.message);
+    // Fallback to LocalStorage Auth system
+    const localUsers = JSON.parse(localStorage.getItem('kaushalji_registered_users') || '[]');
+    if(localUsers.some(u => u.email === email)) {
+      alert('Yeh email pehle se registered hai! Kripya Login karein.');
+      return;
+    }
+    const newUser = {
+      uid: 'local_' + Date.now(),
+      email: email,
+      password: password,
+      fullName: fullName,
+      mobile: mobile,
+      photoURL: photoBase64,
+      isLocal: true
+    };
+    localUsers.push(newUser);
+    localStorage.setItem('kaushalji_registered_users', JSON.stringify(localUsers));
+    localStorage.setItem('kaushalji_local_user', JSON.stringify(newUser));
+    alert('Local Registration Successful! Aap login ho chuke hain.');
+    window.location.reload();
+  }
 });
 
+// Custom Login with LocalStorage & Firebase Support
 $('emailLoginBtn').addEventListener('click', (e) => {
   e.preventDefault();
   const email = $('authEmail').value;
   const password = $('authPassword').value;
   if(!email || !password) { alert('Kripya Email aur Password bharein!'); return; }
+
+  // Check LocalStorage Users first
+  const localUsers = JSON.parse(localStorage.getItem('kaushalji_registered_users') || '[]');
+  const foundUser = localUsers.find(u => u.email === email && u.password === password);
+  
+  if (foundUser) {
+    localStorage.setItem('kaushalji_local_user', JSON.stringify(foundUser));
+    alert('Login Successful!');
+    window.location.reload();
+    return;
+  }
+
+  // Otherwise try Firebase Signin
   signInWithEmailAndPassword(auth, email, password)
-    .catch((error) => alert("Login Failed: " + error.message));
+    .catch((error) => {
+      alert("Login Failed: " + error.message + "\n(Agar aapne local register kiya tha toh details check karein)");
+    });
 });
 
 async function initApp(){
@@ -224,7 +411,6 @@ function loadQuestion(index){
   updatePalette();
 }
 
-// Function to render ALL questions at once for Review & Printing
 function renderAllReviewQuestions() {
   $('quizSubjectBadge').textContent = 'Review All Questions';
   $('quizQuestionCountText').textContent = `Total: ${activeQuizQuestions.length} Questions`;
@@ -245,7 +431,6 @@ function renderAllReviewQuestions() {
   $('backToResultTopBtn').addEventListener('click', () => {
     quizView.classList.add('hidden');
     resultView.classList.remove('hidden');
-    // Reset layout for normal quiz later
     $('timerDisplay').parentElement.parentElement.classList.remove('hidden');
     $('questionPaletteAside').classList.remove('hidden');
     $('quizMainLayoutContainer').style.gridTemplateColumns = '';
@@ -305,10 +490,7 @@ function renderAllReviewQuestions() {
   });
 }
 
-// Print trigger handler
-$('printReviewBtn').addEventListener('click', () => {
-  window.print();
-});
+$('printReviewBtn').addEventListener('click', () => { window.print(); });
 
 function selectOption(qIdx,optIdx){
   if(reviewMode)return;
@@ -335,8 +517,6 @@ function updatePalette(){
     if(idx===currentIndex)btn.classList.add('current');
     if(userAnswers[idx]!==undefined)btn.classList.add('answered');
     if(bookmarked.has(idx))btn.classList.add('bookmarked');
-    if(reviewMode&&idx===currentIndex)btn.setAttribute('aria-current','true');
-    else btn.removeAttribute('aria-current');
   });
 }
 
@@ -392,7 +572,7 @@ async function finishQuiz(){
     $('subjectBreakdownContainer').appendChild(row);
   });
 
-  if (currentUser) {
+  if (currentUser && !currentUser.isLocal) {
     try {
       await setDoc(doc(collection(db, "quiz_progress")), {
         uid: currentUser.uid,
@@ -405,7 +585,6 @@ async function finishQuiz(){
         accuracy: accuracy,
         timestamp: serverTimestamp()
       });
-      console.log("Progress saved to Firestore!");
     } catch (e) {
       console.error("Error saving progress: ", e);
     }
@@ -438,4 +617,3 @@ function registerSW(){
 }
 
 initApp();
-registerSW();
