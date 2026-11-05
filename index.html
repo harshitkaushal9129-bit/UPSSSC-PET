@@ -1,139 +1,178 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="hi">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#4f46e5">
-<title>UPSSSC PET Exam Quiz Prep</title>
-  <link rel="manifest" href="./manifest.json">
-<link rel="icon" href="./icon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="./icon-192.png">
-<meta name="theme-color" content="#4f46e5">
-<link rel="stylesheet" href="style.css">
-<link rel="manifest" href="manifest.json">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Competitive Exams Portal - Kaushalji</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#4f46e5">
+  <link rel="stylesheet" href="style.css">
 </head>
-<body>
-<header class="app-header">
-<div class="logo"><span class="badge">UPSSSC</span><h1>PET Quiz Master</h1></div>
-<div class="header-actions" style="display:flex;align-items:center;gap:10px;">
-  <a href="data.html" class="btn btn-secondary btn-sm" target="_blank">📊 View Data</a>
-  <div id="authContainer"></div>
-  <button id="themeToggleBtn" class="btn btn-secondary">🌙 Dark</button>
-</div>
-</header>
-
-<main class="container">
-  <!-- Auth / Login Section -->
-  <section id="authView" class="view active">
-    <div class="welcome-banner">
-      <h2>Welcome to UPSSSC PET Quiz</h2>
-      <p>Please sign in to start your test and track your progress.</p>
+<body data-theme="light">
+  <header>
+    <div class="logo-area"><span>🚀 Kaushalji Portal</span></div>
+    <div class="header-actions">
+      <button id="appInfoBtn" class="btn btn-secondary btn-sm">ℹ️ App Info</button>
+      <button id="themeToggleBtn" class="btn btn-secondary btn-sm">🌙 Dark</button>
+      <div id="authContainer"></div>
     </div>
-    <div class="config-card" style="max-width: 450px; margin: 0 auto; text-align: center;">
-      <h3>Sign In / Register</h3>
-      <button id="googleLoginBtn" class="btn btn-primary btn-block" style="margin-bottom: 1rem;">🔍 Sign in with Google</button>
-      <div style="margin: 1rem 0; color: var(--muted); font-weight: bold;">— athwa (OR) —</div>
-      <form id="emailAuthForm" style="display: flex; flex-direction: column; gap: 0.8rem; text-align: left;">
+  </header>
+  <main>
+    <div id="authView" class="auth-container card auth-card">
+      <h2>🔐 Welcome to Portal</h2>
+      <div id="authTabsContainer" style="display:flex; gap:10px; margin-bottom:1rem; border-bottom:2px solid var(--border); padding-bottom:0.5rem;">
+        <button id="showLoginTab" class="btn btn-primary btn-sm" style="flex:1;">Login</button>
+        <button id="showRegisterTab" class="btn btn-secondary btn-sm" style="flex:1;">Register / Signup</button>
+      </div>
+      <div id="registerExtraFields" style="display:none; flex-direction:column; gap:0.75rem; margin-bottom:0.75rem;">
+        <div class="input-group">
+          <label>Full Name (Pura Naam)</label>
+          <input type="text" id="regFullName" placeholder="Enter your full name">
+        </div>
+        <div class="input-group">
+          <label>Mobile Number (Mobile No.)</label>
+          <input type="tel" id="regMobile" placeholder="Enter mobile number">
+        </div>
+        <div class="input-group">
+          <label>Profile Photo Upload</label>
+          <input type="file" id="regProfilePic" accept="image/*">
+        </div>
+        <div style="display:flex; align-items:center; justify-content:space-between; background:color-mix(in srgb, var(--primary) 10%, var(--card-bg)); padding:0.6rem; border-radius:8px;">
+          <span id="captchaLabel" style="font-weight:700; font-size:0.85rem;">Security Check: 5 + 3?</span>
+          <input type="number" id="regCaptchaInput" placeholder="Ans" style="width:70px; padding:0.4rem; text-align:center; border:1px solid var(--border); border-radius:6px; background:var(--bg); color:var(--text);">
+        </div>
+      </div>
+      <div class="input-group">
+        <label>Email Address</label>
+        <input type="email" id="authEmail" placeholder="name@example.com">
+      </div>
+      <div class="input-group">
+        <label>Password</label>
+        <input type="password" id="authPassword" placeholder="••••••••">
+      </div>
+      <button id="googleLoginBtn" class="btn btn-secondary btn-block" style="margin-bottom:0.75rem;">🌐 Continue with Google</button>
+      <button id="emailLoginBtn" class="btn btn-primary btn-block">Login Now</button>
+      <button id="emailRegisterBtn" class="btn btn-success btn-block" style="display:none;">Complete Registration</button>
+    </div>
+    <div id="setupView" class="card hidden">
+      <h2 style="margin-bottom:0.5rem;">🎯 Select Quiz Configuration</h2>
+      <p id="questionBankInfo" style="color:var(--muted); font-size:0.9rem; margin-bottom:1rem;">Loading question bank...</p>
+      <h4 style="font-size:0.95rem; margin-bottom:0.5rem;">Select Subject(s):</h4>
+      <div class="subject-grid">
+        <div class="subject-card selected"><input type="checkbox" value="all" checked><span>🌟 All Subjects</span></div>
+        <div class="subject-card"><input type="checkbox" value="history"><span>📜 History</span></div>
+        <div class="subject-card"><input type="checkbox" value="polity"><span>⚖️ Indian Polity</span></div>
+        <div class="subject-card"><input type="checkbox" value="economy"><span>📈 Economy</span></div>
+        <div class="subject-card"><input type="checkbox" value="science"><span>🔬 General Science</span></div>
+      </div>
+      <h4 style="font-size:0.95rem; margin-top:1.5rem; margin-bottom:0.5rem;">Number of Questions:</h4>
+      <div class="count-grid">
+        <div class="count-card" data-count="10">10 Qs</div>
+        <div class="count-card selected" data-count="25">25 Qs</div>
+        <div class="count-card" data-count="50">50 Qs</div>
+        <div class="count-card" data-count="100">100 Qs</div>
+      </div>
+      <button id="startQuizBtn" class="btn btn-primary btn-block" style="margin-top:2rem; padding:0.8rem;">🚀 Start Test Now</button>
+    </div>
+    <div id="quizView" class="hidden">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
         <div>
-          <label style="font-size: 0.85rem; font-weight: 600;">Email ID / Username</label>
-          <input type="email" id="authEmail" class="option-btn" style="width: 100%; margin-top: 0.3rem;" placeholder="Enter your email" required>
+          <span id="quizSubjectBadge" class="q-category">UPSSSC PET</span>
+          <span id="quizQuestionCountText" style="font-size:0.85rem; color:var(--muted); margin-left:8px;">Question 1 of 25</span>
         </div>
-        <div>
-          <label style="font-size: 0.85rem; font-weight: 600;">Password</label>
-          <input type="password" id="authPassword" class="option-btn" style="width: 100%; margin-top: 0.3rem;" placeholder="Enter password" required>
-        </div>
-        <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
-          <button type="submit" id="emailLoginBtn" class="btn btn-primary" style="flex: 1;">Login</button>
-          <button type="button" id="emailRegisterBtn" class="btn btn-secondary" style="flex: 1;">Register</button>
-        </div>
-      </form>
-    </div>
-  </section>
-
-  <!-- Quiz Setup View -->
-  <section id="setupView" class="view hidden">
-    <div class="welcome-banner"><h2>UPSSSC PET Exam Preparation</h2><p>Select one or more subjects and quiz length to begin your practice test.</p></div>
-    <div class="config-card">
-      <h3>1. Select Subject(s)</h3>
-      <div class="subject-grid" id="subjectGrid">
-        <label class="subject-card selected"><input type="checkbox" value="all" checked><span>📚 All Subjects (Full Syllabus)</span></label>
-        <label class="subject-card"><input type="checkbox" value="history"><span>🏛️ Indian History</span></label>
-        <label class="subject-card"><input type="checkbox" value="movement"><span>🚩 National Movement</span></label>
-        <label class="subject-card"><input type="checkbox" value="geography"><span>🌍 Geography</span></label>
-        <label class="subject-card"><input type="checkbox" value="economy"><span>📈 Indian Economy</span></label>
-        <label class="subject-card"><input type="checkbox" value="polity"><span>📜 Constitution & Public Admin</span></label>
-        <label class="subject-card"><input type="checkbox" value="science"><span>🔬 General Science</span></label>
-        <label class="subject-card"><input type="checkbox" value="maths"><span>🔢 Elementary Arithmetic</span></label>
-        <label class="subject-card"><input type="checkbox" value="hindi"><span>✍️ General Hindi</span></label>
-        <label class="subject-card"><input type="checkbox" value="english"><span>🔤 General English</span></label>
-        <label class="subject-card"><input type="checkbox" value="reasoning"><span>🧩 Logic & Reasoning</span></label>
-        <label class="subject-card"><input type="checkbox" value="current"><span>📰 Current Affairs</span></label>
-        <label class="subject-card"><input type="checkbox" value="gk"><span>🌐 General Awareness</span></label>
-      </div>
-    </div>
-    <div class="config-card">
-      <h3>2. Select Number of Questions</h3>
-      <div class="count-grid" id="countGrid">
-        <button class="count-card selected" data-count="25"><b>25</b><span>Quick Practice</span><small>⏱️ 30 Mins</small></button>
-        <button class="count-card" data-count="50"><b>50</b><span>Standard Quiz</span><small>⏱️ 60 Mins</small></button>
-        <button class="count-card" data-count="75"><b>75</b><span>Advanced Practice</span><small>⏱️ 90 Mins</small></button>
-        <button class="count-card" data-count="100"><b>100</b><span>Full Mock Exam</span><small>⏱️ 120 Mins</small></button>
-      </div>
-    </div>
-    <p id="questionBankInfo" class="muted"></p>
-    <button id="startQuizBtn" class="btn btn-primary btn-block btn-lg">Start Quiz Test</button>
-  </section>
-
-  <!-- Quiz View -->
-  <section id="quizView" class="view hidden">
-    <div class="quiz-header-bar">
-      <div><span id="quizSubjectBadge" class="badge">General</span> <span id="quizQuestionCountText">Question 1</span></div>
-      <div style="display:flex; gap:10px; align-items:center;">
-        <button id="printReviewBtn" class="btn btn-secondary btn-sm hidden" style="background:var(--primary);color:#white;">🖨️ Print / Save PDF</button>
-        <div class="timer-box">⏱️ <span id="timerDisplay">30:00</span></div>
-      </div>
-    </div>
-    <div class="quiz-main-layout" id="quizMainLayoutContainer">
-      <div class="quiz-question-container" id="quizQuestionContainerWrapper">
-        <div class="question-header"><span id="questionCategory" class="q-category">Subject</span><button id="bookmarkBtn" class="btn btn-secondary btn-sm">🔖 Bookmark</button></div>
-        <h3 id="questionText" class="question-text">Loading question...</h3>
-        <div id="optionsContainer" class="options-container"></div>
-        <div id="explanationBox" class="explanation-box hidden"><strong>Explanation:</strong><p id="explanationText"></p></div>
-        <div class="quiz-controls" id="quizControlsBar">
-          <button id="prevQuestionBtn" class="btn btn-secondary">Previous</button>
-          <button id="clearOptionBtn" class="btn btn-secondary">Clear Selection</button>
-          <button id="nextQuestionBtn" class="btn btn-primary">Next</button>
-          <button id="submitQuizBtn" class="btn btn-success">Submit Test</button>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div style="background:var(--card-bg); border:1px solid var(--border); padding:4px 12px; border-radius:20px; font-weight:700; font-family:monospace;">⏱️ <span id="timerDisplay">00:00</span></div>
+          <button id="printReviewBtn" class="btn btn-secondary btn-sm hidden">🖨️ Print / Save PDF</button>
         </div>
       </div>
-      <aside class="question-palette-panel" id="questionPaletteAside">
-        <h4>Question Palette</h4><div id="paletteGrid" class="palette-grid"></div>
-        <div class="palette-legend">
-          <div><i class="legend-dot current"></i> Current</div><div><i class="legend-dot answered"></i> Answered</div>
-          <div><i class="legend-dot bookmarked"></i> Bookmarked</div><div><i class="legend-dot unvisited"></i> Unanswered</div>
+      <div id="quizMainLayoutContainer" class="quiz-layout">
+        <div class="card question-box" id="quizQuestionContainerWrapper">
+          <div class="question-header">
+            <span id="questionCategory" class="q-category">Subject</span>
+            <button id="bookmarkBtn" class="btn btn-secondary btn-sm">🔖 Bookmark</button>
+          </div>
+          <h3 id="questionText" class="question-text">Loading question...</h3>
+          <div id="optionsContainer" class="options-container"></div>
+          <div id="explanationBox" class="explanation-box hidden" style="background:color-mix(in srgb, var(--warning) 12%, var(--card-bg)); border-left:4px solid var(--warning); padding:0.8rem; border-radius:6px; margin-top:0.4rem; font-size:0.9rem;">
+            <strong>Explanation:</strong>
+            <p id="explanationText" style="margin-top:0.2rem; color:var(--muted);"></p>
+          </div>
+          <div class="quiz-controls" id="quizControlsBar" style="display:flex; justify-content:space-between; gap:10px; margin-top:1rem; border-top:1px solid var(--border); padding-top:1rem; flex-wrap:wrap;">
+            <button id="prevQuestionBtn" class="btn btn-secondary">Previous</button>
+            <button id="clearOptionBtn" class="btn btn-secondary">Clear Selection</button>
+            <button id="nextQuestionBtn" class="btn btn-primary">Next</button>
+            <button id="submitQuizBtn" class="btn btn-success">Submit Test</button>
+          </div>
         </div>
-      </aside>
+        <aside class="card" id="questionPaletteAside" style="height:fit-content; display:flex; flex-direction:column; gap:1rem;">
+          <h4 style="font-size:0.95rem;">Question Palette</h4>
+          <div id="paletteGrid" class="palette-grid"></div>
+        </aside>
+      </div>
     </div>
-  </section>
-
-  <!-- Result View -->
-  <section id="resultView" class="view hidden">
-    <div class="result-card">
-      <h2>Quiz Performance Summary</h2>
-      <div class="score-summary">
-        <div class="score-circle"><span id="finalScore">0.00</span><small id="maxScore">/ 25 Marks</small></div>
-        <div class="stats-grid">
-          <div class="stat-item positive"><b id="statCorrect">0</b><span>Correct (+1)</span></div>
-          <div class="stat-item negative"><b id="statWrong">0</b><span>Incorrect (-0.25)</span></div>
-          <div class="stat-item neutral"><b id="statUnanswered">0</b><span>Unanswered</span></div>
-          <div class="stat-item"><b id="statAccuracy">0%</b><span>Accuracy</span></div>
+    <div id="resultView" class="card hidden" style="text-align:center; display:flex; flex-direction:column; gap:1.25rem;">
+      <h2>🎉 Test Submitted Successfully!</h2>
+      <div style="font-size:2.5rem; font-weight:800; color:var(--primary);">
+        <span id="finalScore">0</span> <span id="maxScore" style="font-size:1.2rem; color:var(--muted);">/ 25 Marks</span>
+      </div>
+      <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:10px; margin-top:0.5rem;">
+        <div style="background:var(--bg); padding:1rem; border-radius:10px;">
+          <span style="font-size:0.8rem; color:var(--muted);">Correct Answers</span>
+          <h3 id="statCorrect" style="color:var(--success); font-size:1.3rem;">0</h3>
+        </div>
+        <div style="background:var(--bg); padding:1rem; border-radius:10px;">
+          <span style="font-size:0.8rem; color:var(--muted);">Incorrect / Wrong</span>
+          <h3 id="statWrong" style="color:var(--danger); font-size:1.3rem;">0</h3>
+        </div>
+        <div style="background:var(--bg); padding:1rem; border-radius:10px;">
+          <span style="font-size:0.8rem; color:var(--muted);">Unanswered (Blank)</span>
+          <h3 id="statUnanswered" style="color:var(--warning); font-size:1.3rem;">0</h3>
+        </div>
+        <div style="background:var(--bg); padding:1rem; border-radius:10px;">
+          <span style="font-size:0.8rem; color:var(--muted);">Accuracy</span>
+          <h3 id="statAccuracy" style="color:var(--primary); font-size:1.3rem;">0%</h3>
         </div>
       </div>
-      <h3>Subject Breakdown</h3><div id="subjectBreakdownContainer" class="subject-breakdown"></div>
-      <div class="result-actions"><button id="restartQuizBtn" class="btn btn-primary">Take Another Test</button><button id="reviewAnswersBtn" class="btn btn-secondary">Review Answers</button></div>
+      <div id="subjectBreakdownContainer" style="display:flex; flex-direction:column; gap:0.5rem; text-align:left; margin-top:0.5rem;"></div>
+      <div style="display:flex; gap:10px; margin-top:1rem;">
+        <button id="reviewAnswersBtn" class="btn btn-secondary btn-block">📖 Review All Questions</button>
+        <button id="restartQuizBtn" class="btn btn-primary btn-block">🔄 Take Another Test</button>
+      </div>
     </div>
-  </section>
-</main>
-<script type="module" src="script.js"></script>
+  </main>
+  <div id="appInfoModal" class="modal-overlay">
+    <div class="modal-content">
+      <button id="closeModalBtn" style="position:absolute; top:12px; right:12px; background:none; border:none; font-size:1.2rem; cursor:pointer; color:var(--text);">✕</button>
+      <div style="text-align:center; border-bottom:2px solid var(--border); padding-bottom:0.75rem;">
+        <h3 style="margin:0; font-size:1.3rem; color:var(--primary);">🚀 App & Developer Info</h3>
+        <p style="margin:0.2rem 0 0 0; font-size:0.85rem; color:var(--muted);">Competitive Exams Portal (UPSSSC PET & More)</p>
+      </div>
+      <div style="background:color-mix(in srgb, var(--primary) 10%, var(--card-bg)); padding:0.75rem; border-radius:10px; text-align:center; display:flex; flex-direction:column; gap:2px;">
+        <span style="font-size:0.8rem; font-weight:600; color:var(--muted);">Live Date & Time</span>
+        <span id="modalLiveDateTime" style="font-size:0.95rem; font-weight:700; color:var(--text);">Loading...</span>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:0.6rem; font-size:0.92rem;">
+        <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border); padding-bottom:4px;">
+          <span style="color:var(--muted);">Developer Name:</span>
+          <strong style="color:var(--text);">Harshit Kaushal (Kaushalji)</strong>
+        </div>
+        <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border); padding-bottom:4px;">
+          <span style="color:var(--muted);">Contact Number:</span>
+          <a href="tel:9129191898" style="color:var(--primary); text-decoration:none; font-weight:600;">9129191898</a>
+        </div>
+        <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border); padding-bottom:4px;">
+          <span style="color:var(--muted);">WhatsApp:</span>
+          <a href="https://wa.me/919129191898" target="_blank" style="color:var(--success); text-decoration:none; font-weight:600;">9129191898 💬</a>
+        </div>
+      </div>
+      <div style="text-align:center; background:color-mix(in srgb, var(--border) 20%, var(--card-bg)); padding:0.75rem; border-radius:10px; display:flex; flex-direction:column; align-items:center; gap:6px;">
+        <span style="font-size:0.85rem; font-weight:700;">Support / UPI QR Code</span>
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=130x130&data=upi://pay?pa=mandavikaushal913@okaxis&pn=Harshit%20Kaushal" alt="UPI QR Code" style="width:120px; height:120px; border-radius:8px; background:#fff; padding:4px;">
+        <span style="font-size:0.75rem; color:var(--muted); font-family:monospace;">UPI ID: mandavikaushal913@okaxis</span>
+      </div>
+      <button id="closeModalFooterBtn" class="btn btn-primary btn-block" style="padding:0.6rem;">Close</button>
+    </div>
+  </div>
+  <script type="module" src="script.js"></script>
 </body>
 </html>
