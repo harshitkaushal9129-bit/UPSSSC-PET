@@ -322,7 +322,7 @@ $('startQuizBtn').addEventListener('click', () => {
   if(!allQuestions.length) { alert('Question bank abhi load nahi hua hai.'); return; }
   const chosen = subjectCards.slice(1).filter(c => c.querySelector('input').checked).map(c => c.querySelector('input').value);
   let pool = subjectCards[0].querySelector('input').checked || chosen.length === 0 ? allQuestions : allQuestions.filter(q => chosen.includes(q.subject));
-  if(!pool.length) { alert('Selected subjects ke liye koi questions nahi mile.'); return; }
+  if(!pool.length) { alert('Selected subjects ke liye koi questions nahi मिले.'); return; }
   
   pool = [...pool].sort(() => Math.random() - .5);
   activeQuizQuestions = pool.slice(0, Math.min(selectedCount, pool.length));
