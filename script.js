@@ -50,7 +50,8 @@ document.addEventListener('DOMContentLoaded', () => {
   generateCaptcha();
   const savedTheme = localStorage.getItem('kaushalji_theme') || 'light';
   document.body.setAttribute('data-theme', savedTheme);
-  $('themeToggleBtn').textContent = savedTheme === 'dark' ? '☀️ Light' : '🌙 Dark';
+  const themeBtn = $('themeToggleBtn');
+  if(themeBtn) themeBtn.textContent = savedTheme === 'dark' ? '☀️ Light' : '🌙 Dark';
 
   const showLoginTab = $('showLoginTab');
   const showRegisterTab = $('showRegisterTab');
@@ -133,6 +134,7 @@ onAuthStateChanged(auth, async (user) => {
 
   currentUser = activeUser;
   const authContainer = $('authContainer');
+  if(!authContainer) return;
   
   if (activeUser) {
     let userAge = '';
@@ -166,14 +168,14 @@ onAuthStateChanged(auth, async (user) => {
               ${userMobile ? `<p style="margin:0; font-size:0.75rem; color:var(--success);">📱 ${userMobile}</p>` : ''}
             </div>
           </div>
-          <div style="display:flex;flex-direction:column;gap:0.4rem;">
+          <div style="display:flex;flex-direction:column;gap:0.4rem; margin-top:0.5rem;">
             <label style="font-size:0.75rem;font-weight:600;">Aapki Age (Umar):</label>
             <div style="display:flex;gap:0.4rem;">
               <input type="number" id="userAgeInput" class="btn btn-secondary btn-sm" style="width:100%; text-align:left;" value="${userAge}" placeholder="Age">
               <button id="saveAgeBtn" class="btn btn-primary btn-sm">Save</button>
             </div>
           </div>
-          <button id="logoutBtn" class="btn btn-secondary btn-sm btn-block" style="color:var(--danger);">Logout</button>
+          <button id="logoutBtn" class="btn btn-secondary btn-sm btn-block" style="color:var(--danger); margin-top:0.5rem;">Logout</button>
         </div>
       </div>
     `;
@@ -206,84 +208,107 @@ onAuthStateChanged(auth, async (user) => {
       window.location.reload();
     });
     
-    authView.classList.add('hidden');
-    setupView.classList.remove('hidden');
+    if(authView) authView.classList.add('hidden');
+    if(setupView) setupView.classList.remove('hidden');
   } else {
     authContainer.innerHTML = '';
-    setupView.classList.add('hidden');
-    quizView.classList.add('hidden');
-    resultView.classList.add('hidden');
-    authView.classList.remove('hidden');
+    if(setupView) setupView.classList.add('hidden');
+    if(quizView) quizView.classList.add('hidden');
+    if(resultView) resultView.classList.add('hidden');
+    if(authView) authView.classList.remove('hidden');
   }
 });
 
-$('googleLoginBtn').addEventListener('click', () => {
-  signInWithPopup(auth, provider).catch((error) => alert("Login failed: " + error.message));
-});
+const googleLoginBtn = $('googleLoginBtn');
+if(googleLoginBtn) {
+  googleLoginBtn.addEventListener('click', () => {
+    signInWithPopup(auth, provider).catch((error) => alert("Login failed: " + error.message));
+  });
+}
 
-$('emailRegisterBtn').addEventListener('click', async () => {
-  const email = $('authEmail').value;
-  const password = $('authPassword').value;
-  const fullName = $('regFullName').value;
-  const mobile = $('regMobile').value;
-  const captchaInput = parseInt($('regCaptchaInput').value);
+const emailRegisterBtn = $('emailRegisterBtn');
+if(emailRegisterBtn) {
+  emailRegisterBtn.addEventListener('click', async () => {
+    const email = $('authEmail').value;
+    const password = $('authPassword').value;
+    const fullName = $('regFullName').value;
+    const mobile = $('regMobile').value;
+    const captchaInput = parseInt($('regCaptchaInput').value);
 
-  if(!email || !password || !fullName || !mobile) { alert('Kripya Sabhi Fields bharein!'); return; }
-  if (isNaN(captchaInput) || captchaInput !== currentCaptchaAnswer) {
-    alert('Galat Captcha! Kripya sahi calculation likhein.');
-    generateCaptcha();
-    return;
-  }
+    if(!email || !password || !fullName || !mobile) { alert('Kripya Sabhi Fields bharein!'); return; }
+    if (isNaN(captchaInput) || captchaInput !== currentCaptchaAnswer) {
+      alert('Galat Captcha! Kripya sahi calculation likhein.');
+      generateCaptcha();
+      return;
+    }
 
-  let photoBase64 = 'https://via.placeholder.com/150';
-  const fileInput = $('regProfilePic');
-  if (fileInput && fileInput.files && fileInput.files[0]) {
-    try { photoBase64 = await convertImageToBase64(fileInput.files[0]); } catch(err) {}
-  }
+    let photoBase64 = 'https://via.placeholder.com/150';
+    const fileInput = $('regProfilePic');
+    if (fileInput && fileInput.files && fileInput.files[0]) {
+      try { photoBase64 = await convertImageToBase64(fileInput.files[0]); } catch(err) {}
+    }
 
-  try {
-    const cred = await createUserWithEmailAndPassword(auth, email, password);
-    await setDoc(doc(db, "users", cred.user.uid), {
-      uid: cred.user.uid, email, fullName, mobile, photoURL: photoBase64, createdAt: serverTimestamp()
-    });
-    alert('Firebase Registration Successful!');
-  } catch (error) {
+    try {
+      const cred = await createUserWithEmailAndPassword(auth, email, password);
+      await setDoc(doc(db, "users", cred.user.uid), {
+        uid: cred.user.uid, email, fullName, mobile, photoURL: photoBase64, createdAt: serverTimestamp()
+      });
+      alert('Firebase Registration Successful!');
+    } catch (error) {
+      const localUsers = JSON.parse(localStorage.getItem('kaushalji_registered_users') || '[]');
+      if(localUsers.some(u => u.email === email)) { alert('Yeh email pehle se registered hai!'); return; }
+      const newUser = { uid: 'local_' + Date.now(), email, password, fullName, mobile, photoURL: photoBase64, isLocal: true };
+      localUsers.push(newUser);
+      localStorage.setItem('kaushalji_registered_users', JSON.stringify(localUsers));
+      localStorage.setItem('kaushalji_local_user', JSON.stringify(newUser));
+      alert('Local Registration Successful!');
+      window.location.reload();
+    }
+  });
+}
+
+const emailLoginBtn = $('emailLoginBtn');
+if(emailLoginBtn) {
+  emailLoginBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    const email = $('authEmail').value;
+    const password = $('authPassword').value;
+    if(!email || !password) { alert('Kripya Email aur Password bharein!'); return; }
+
     const localUsers = JSON.parse(localStorage.getItem('kaushalji_registered_users') || '[]');
-    if(localUsers.some(u => u.email === email)) { alert('Yeh email pehle se registered hai!'); return; }
-    const newUser = { uid: 'local_' + Date.now(), email, password, fullName, mobile, photoURL: photoBase64, isLocal: true };
-    localUsers.push(newUser);
-    localStorage.setItem('kaushalji_registered_users', JSON.stringify(localUsers));
-    localStorage.setItem('kaushalji_local_user', JSON.stringify(newUser));
-    alert('Local Registration Successful!');
-    window.location.reload();
-  }
-});
+    const foundUser = localUsers.find(u => u.email === email && u.password === password);
+    if (foundUser) {
+      localStorage.setItem('kaushalji_local_user', JSON.stringify(foundUser));
+      alert('Login Successful!');
+      window.location.reload();
+      return;
+    }
 
-$('emailLoginBtn').addEventListener('click', (e) => {
-  e.preventDefault();
-  const email = $('authEmail').value;
-  const password = $('authPassword').value;
-  if(!email || !password) { alert('Kripya Email aur Password bharein!'); return; }
-
-  const localUsers = JSON.parse(localStorage.getItem('kaushalji_registered_users') || '[]');
-  const foundUser = localUsers.find(u => u.email === email && u.password === password);
-  if (foundUser) {
-    localStorage.setItem('kaushalji_local_user', JSON.stringify(foundUser));
-    alert('Login Successful!');
-    window.location.reload();
-    return;
-  }
-
-  signInWithEmailAndPassword(auth, email, password).catch((error) => alert("Login Failed: " + error.message));
-});
+    signInWithEmailAndPassword(auth, email, password).catch((error) => alert("Login Failed: " + error.message));
+  });
+}
 
 async function initApp() {
   try {
     const res = await fetch('questions.json');
     if(!res.ok) throw new Error('Failed to load questions.json');
-    const rawData = await res.json();
+    const data = await res.json();
     
-    // Pro-level safety: Automatically assign dynamic IDs if missing in JSON
+    let rawData = [];
+    if (Array.isArray(data)) {
+      rawData = data;
+    } else {
+      // Handles your exact object structure where keys are subjects (history, geography, etc.)
+      Object.keys(data).forEach(subjKey => {
+        if (Array.isArray(data[subjKey])) {
+          data[subjKey].forEach(q => {
+            q.subject = q.subject || subjKey;
+            rawData.push(q);
+          });
+        }
+      });
+    }
+
     allQuestions = rawData.map((q, idx) => ({
       id: q.id || `q_${idx + 1}`,
       subject: q.subject || 'general',
@@ -293,22 +318,33 @@ async function initApp() {
       explanation: q.explanation || 'No explanation provided.'
     }));
 
-    $('questionBankInfo').textContent = `Question bank loaded: ${allQuestions.length} questions available.`;
+    const infoElem = $('questionBankInfo');
+    if(infoElem) infoElem.textContent = `Question bank loaded: ${allQuestions.length} questions available.`;
   } catch (err) {
-    $('questionBankInfo').textContent = 'Could not load questions.json. Please ensure it is in the root directory.';
+    const infoElem = $('questionBankInfo');
+    if(infoElem) infoElem.textContent = 'Could not load questions.json. Please ensure it is in the root directory.';
     console.error(err);
   }
 }
 
 subjectCards.forEach(card => card.addEventListener('click', () => {
   const input = card.querySelector('input');
+  if(!input) return;
   if(input.value === 'all') {
-    subjectCards.forEach(c => { c.querySelector('input').checked = c === card; c.classList.toggle('selected', c === card); });
+    subjectCards.forEach(c => { 
+      const inp = c.querySelector('input');
+      if(inp) inp.checked = c === card; 
+      c.classList.toggle('selected', c === card); 
+    });
   } else {
-    const all = subjectCards[0]; all.querySelector('input').checked = false; all.classList.remove('selected');
-    input.checked = !input.checked; card.classList.toggle('selected', input.checked);
-    const any = subjectCards.slice(1).some(c => c.querySelector('input').checked);
-    if(!any) { all.querySelector('input').checked = true; all.classList.add('selected'); }
+    const all = subjectCards[0]; 
+    const allInp = all.querySelector('input');
+    if(allInp) allInp.checked = false; 
+    all.classList.remove('selected');
+    input.checked = !input.checked; 
+    card.classList.toggle('selected', input.checked);
+    const any = subjectCards.slice(1).some(c => c.querySelector('input')?.checked);
+    if(!any && allInp) { allInp.checked = true; all.classList.add('selected'); }
   }
 }));
 
@@ -318,26 +354,29 @@ countCards.forEach(card => card.addEventListener('click', () => {
   selectedCount = Number(card.dataset.count);
 }));
 
-$('startQuizBtn').addEventListener('click', () => {
-  if(!allQuestions.length) { alert('Question bank abhi load nahi hua hai.'); return; }
-  const chosen = subjectCards.slice(1).filter(c => c.querySelector('input').checked).map(c => c.querySelector('input').value);
-  let pool = subjectCards[0].querySelector('input').checked || chosen.length === 0 ? allQuestions : allQuestions.filter(q => chosen.includes(q.subject));
-  if(!pool.length) { alert('Selected subjects ke liye koi questions nahi मिले.'); return; }
-  
-  pool = [...pool].sort(() => Math.random() - .5);
-  activeQuizQuestions = pool.slice(0, Math.min(selectedCount, pool.length));
-  currentIndex = 0; userAnswers = {}; bookmarked.clear(); reviewMode = false;
-  
-  setupView.classList.add('hidden'); 
-  resultView.classList.add('hidden'); 
-  quizView.classList.remove('hidden');
-  
-  timeRemaining = Math.ceil(activeQuizQuestions.length * 72);
-  $('timerDisplay').textContent = formatTime(timeRemaining);
-  startTimer(); 
-  renderPalette(); 
-  loadQuestion(0);
-});
+const startQuizBtn = $('startQuizBtn');
+if(startQuizBtn) {
+  startQuizBtn.addEventListener('click', () => {
+    if(!allQuestions.length) { alert('Question bank abhi load nahi hua hai.'); return; }
+    const chosen = subjectCards.slice(1).filter(c => c.querySelector('input')?.checked).map(c => c.querySelector('input').value);
+    let pool = subjectCards[0].querySelector('input')?.checked || chosen.length === 0 ? allQuestions : allQuestions.filter(q => chosen.includes(q.subject));
+    if(!pool.length) { alert('Selected subjects ke liye koi questions nahi mile.'); return; }
+    
+    pool = [...pool].sort(() => Math.random() - .5);
+    activeQuizQuestions = pool.slice(0, Math.min(selectedCount, pool.length));
+    currentIndex = 0; userAnswers = {}; bookmarked.clear(); reviewMode = false;
+    
+    setupView.classList.add('hidden'); 
+    resultView.classList.add('hidden'); 
+    quizView.classList.remove('hidden');
+    
+    timeRemaining = Math.ceil(activeQuizQuestions.length * 72);
+    $('timerDisplay').textContent = formatTime(timeRemaining);
+    startTimer(); 
+    renderPalette(); 
+    loadQuestion(0);
+  });
+}
 
 function formatTime(seconds) {
   return `${Math.floor(seconds/60).toString().padStart(2,'0')}:${(seconds%60).toString().padStart(2,'0')}`;
@@ -347,7 +386,8 @@ function startTimer() {
   clearInterval(timerInterval);
   timerInterval = setInterval(() => {
     timeRemaining--; 
-    $('timerDisplay').textContent = formatTime(Math.max(0, timeRemaining));
+    const timerDisp = $('timerDisplay');
+    if(timerDisp) timerDisp.textContent = formatTime(Math.max(0, timeRemaining));
     if(timeRemaining <= 0) { clearInterval(timerInterval); finishQuiz(); }
   }, 1000);
 }
@@ -384,10 +424,14 @@ function loadQuestion(index) {
 
 function renderAllReviewQuestions() {
   $('quizQuestionCountText').textContent = `Total: ${activeQuizQuestions.length} Questions (Review Mode)`;
-  $('timerDisplay').parentElement.parentElement.classList.add('hidden');
-  $('questionPaletteAside').classList.add('hidden');
-  $('quizMainLayoutContainer').style.gridTemplateColumns = '1fr';
-  $('printReviewBtn').classList.remove('hidden');
+  const timerParent = $('timerDisplay')?.parentElement?.parentElement;
+  if(timerParent) timerParent.classList.add('hidden');
+  const paletteAside = $('questionPaletteAside');
+  if(paletteAside) paletteAside.classList.add('hidden');
+  const mainLayout = $('quizMainLayoutContainer');
+  if(mainLayout) mainLayout.style.gridTemplateColumns = '1fr';
+  const printBtn = $('printReviewBtn');
+  if(printBtn) printBtn.classList.remove('hidden');
 
   const containerWrapper = $('quizQuestionContainerWrapper');
   containerWrapper.innerHTML = `
@@ -401,10 +445,10 @@ function renderAllReviewQuestions() {
   $('backToResultTopBtn').addEventListener('click', () => {
     quizView.classList.add('hidden');
     resultView.classList.remove('hidden');
-    $('timerDisplay').parentElement.parentElement.classList.remove('hidden');
-    $('questionPaletteAside').classList.remove('hidden');
-    $('quizMainLayoutContainer').style.gridTemplateColumns = '';
-    $('printReviewBtn').classList.add('hidden');
+    if(timerParent) timerParent.classList.remove('hidden');
+    if(paletteAside) paletteAside.classList.remove('hidden');
+    if(mainLayout) mainLayout.style.gridTemplateColumns = '';
+    if(printBtn) printBtn.classList.add('hidden');
     containerWrapper.innerHTML = `
       <div class="question-header"><span id="questionCategory" class="q-category">Subject</span><button id="bookmarkBtn" class="btn btn-secondary btn-sm">🔖 Bookmark</button></div>
       <h3 id="questionText" class="question-text">Loading question...</h3>
@@ -417,6 +461,7 @@ function renderAllReviewQuestions() {
         <button id="submitQuizBtn" class="btn btn-success">Submit Test</button>
       </div>
     `;
+    bindQuizControls();
   });
 
   const listContainer = $('allReviewListContainer');
@@ -451,7 +496,8 @@ function renderAllReviewQuestions() {
   });
 }
 
-$('printReviewBtn').addEventListener('click', () => window.print());
+const printReviewBtn = $('printReviewBtn');
+if(printReviewBtn) printReviewBtn.addEventListener('click', () => window.print());
 
 function selectOption(qIdx, optIdx) {
   if(reviewMode) return;
@@ -461,6 +507,7 @@ function selectOption(qIdx, optIdx) {
 
 function renderPalette() {
   const grid = $('paletteGrid');
+  if(!grid) return;
   grid.innerHTML = '';
   activeQuizQuestions.forEach((_, idx) => {
     const btn = document.createElement('button');
@@ -481,16 +528,27 @@ function updatePalette() {
   });
 }
 
-$('bookmarkBtn').addEventListener('click', () => {
-  if(bookmarked.has(currentIndex)) bookmarked.delete(currentIndex);
-  else bookmarked.add(currentIndex);
-  loadQuestion(currentIndex);
-});
+function bindQuizControls() {
+  const bookmarkBtn = $('bookmarkBtn');
+  if(bookmarkBtn) bookmarkBtn.addEventListener('click', () => {
+    if(bookmarked.has(currentIndex)) bookmarked.delete(currentIndex);
+    else bookmarked.add(currentIndex);
+    loadQuestion(currentIndex);
+  });
 
-$('prevQuestionBtn').addEventListener('click', () => { if(currentIndex > 0) { currentIndex--; loadQuestion(currentIndex); } });
-$('nextQuestionBtn').addEventListener('click', () => { if(currentIndex < activeQuizQuestions.length - 1) { currentIndex++; loadQuestion(currentIndex); } });
-$('clearOptionBtn').addEventListener('click', () => { delete userAnswers[currentIndex]; loadQuestion(currentIndex); });
-$('submitQuizBtn').addEventListener('click', () => { if(confirm('Are you sure you want to submit the test?')) finishQuiz(); });
+  const prevBtn = $('prevQuestionBtn');
+  if(prevBtn) prevBtn.addEventListener('click', () => { if(currentIndex > 0) { currentIndex--; loadQuestion(currentIndex); } });
+
+  const nextBtn = $('nextQuestionBtn');
+  if(nextBtn) nextBtn.addEventListener('click', () => { if(currentIndex < activeQuizQuestions.length - 1) { currentIndex++; loadQuestion(currentIndex); } });
+
+  const clearBtn = $('clearOptionBtn');
+  if(clearBtn) clearBtn.addEventListener('click', () => { delete userAnswers[currentIndex]; loadQuestion(currentIndex); });
+
+  const submitBtn = $('submitQuizBtn');
+  if(submitBtn) submitBtn.addEventListener('click', () => { if(confirm('Are you sure you want to submit the test?')) finishQuiz(); });
+}
+bindQuizControls();
 
 async function finishQuiz() {
   clearInterval(timerInterval);
@@ -521,13 +579,15 @@ async function finishQuiz() {
   $('statAccuracy').textContent = `${accuracy}%`;
 
   const breakdown = $('subjectBreakdownContainer');
-  breakdown.innerHTML = '';
-  Object.entries(bySubject).forEach(([subject, stats]) => {
-    const row = document.createElement('div');
-    row.style.cssText = "display:flex; justify-content:space-between; background:var(--bg); padding:0.6rem 1rem; border-radius:8px; font-size:0.9rem;";
-    row.innerHTML = `<strong>${subject.toUpperCase()}</strong> <span>${stats.correct}/${stats.total} correct</span>`;
-    breakdown.appendChild(row);
-  });
+  if(breakdown) {
+    breakdown.innerHTML = '';
+    Object.entries(bySubject).forEach(([subject, stats]) => {
+      const row = document.createElement('div');
+      row.style.cssText = "display:flex; justify-content:space-between; background:var(--bg); padding:0.6rem 1rem; border-radius:8px; font-size:0.9rem;";
+      row.innerHTML = `<strong>${subject.toUpperCase()}</strong> <span>${stats.correct}/${stats.total} correct</span>`;
+      breakdown.appendChild(row);
+    });
+  }
 
   if (currentUser && !currentUser.isLocal) {
     try {
@@ -538,25 +598,34 @@ async function finishQuiz() {
   }
 }
 
-$('restartQuizBtn').addEventListener('click', () => {
-  clearInterval(timerInterval);
-  resultView.classList.add('hidden');
-  setupView.classList.remove('hidden');
-});
+const restartQuizBtn = $('restartQuizBtn');
+if(restartQuizBtn) {
+  restartQuizBtn.addEventListener('click', () => {
+    clearInterval(timerInterval);
+    resultView.classList.add('hidden');
+    setupView.classList.remove('hidden');
+  });
+}
 
-$('reviewAnswersBtn').addEventListener('click', () => {
-  reviewMode = true;
-  resultView.classList.add('hidden');
-  quizView.classList.remove('hidden');
-  loadQuestion(0);
-});
+const reviewAnswersBtn = $('reviewAnswersBtn');
+if(reviewAnswersBtn) {
+  reviewAnswersBtn.addEventListener('click', () => {
+    reviewMode = true;
+    resultView.classList.add('hidden');
+    quizView.classList.remove('hidden');
+    loadQuestion(0);
+  });
+}
 
-$('themeToggleBtn').addEventListener('click', () => {
-  const dark = document.body.getAttribute('data-theme') === 'dark';
-  const newTheme = dark ? 'light' : 'dark';
-  document.body.setAttribute('data-theme', newTheme);
-  localStorage.setItem('kaushalji_theme', newTheme);
-  $('themeToggleBtn').textContent = newTheme === 'dark' ? '☀️ Light' : '🌙 Dark';
-});
+const themeToggleBtn = $('themeToggleBtn');
+if(themeToggleBtn) {
+  themeToggleBtn.addEventListener('click', () => {
+    const dark = document.body.getAttribute('data-theme') === 'dark';
+    const newTheme = dark ? 'light' : 'dark';
+    document.body.setAttribute('data-theme', newTheme);
+    localStorage.setItem('kaushalji_theme', newTheme);
+    themeToggleBtn.textContent = newTheme === 'dark' ? '☀️ Light' : '🌙 Dark';
+  });
+}
 
 initApp();
